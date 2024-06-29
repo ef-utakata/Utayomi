@@ -1,0 +1,11 @@
+output/my_results
+output/*.csv
+input/*.csv
+input/demo/.*
+models/*.gguf
+.ipynb_checkpoints
+lib/.ipynb_checkpoints
+lib/submodules/.ipynb_checkpoints
+lib/__pycache__
+lib/submodules/__pycache__
+input/.*

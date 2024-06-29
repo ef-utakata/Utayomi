@@ -1,0 +1,130 @@
+# 登録モデルごとのconfig
+# models in transformers
+Umievo:
+    model_path: "umiyuki/Umievo-itr012-Gleipnir-7B"
+    model_type: "trf"
+    stance: 0
+    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語"]
+    temperature: 0.8
+    chr_num: 100
+    Max_Tokens: 1024
+    min_new_tokens: 400
+    Top_P: 0.95
+    sleep: 1
+    
+Oumuamua: 
+    model_path: "./models/Oumuamua-7b-instruct.Q5_K_M.gguf"
+    model_url: "https://huggingface.co/QuantFactory/Oumuamua-7b-instruct-GGUF/resolve/main/Oumuamua-7b-instruct.Q5_K_M.gguf"
+    model_type: "gguf"
+    stance: 0
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "定型", "詳細"]
+    temperature: 0.8
+    chr_num: 100
+    top_P: 0.8
+    max_Tokens: 1024
+    frequency_Penalty: 1.0
+    presence_Penalty:  1.5
+    context_Length: 1024
+    embedding: False
+    repeat_penalty: 0.8
+
+Phi-3-mini:
+    model_path: "microsoft/Phi-3-mini-4k-instruct"
+    model_type: "trf"
+    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    stance: 0
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細", "季語"]
+    temperature: 0.8
+    chr_num: 100
+    Max_Tokens: 1024
+
+Ninja-v1-rp: 
+    model_path: "Aratako/Ninja-v1-RP"
+    model_type: "trf"
+    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    stance: 0
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細", "季語"]
+    temperature: 0.8
+    chr_num: 100
+    Max_Tokens: 700
+    repetition_penalty: 1.4
+    Top_P: 0.95
+    
+Ninja-v2-7b: 
+    model_path: "Local-Novel-LLM-project/Ninja-V2-7B"
+    model_type: "trf"
+    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    stance: 0
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細", "季語"]
+    temperature: 0.8
+    chr_num: 100
+    Max_Tokens: 700
+    repetition_penalty: 1.1
+    Top_P: 0.95
+    
+Phi-3-medium:
+    model_type: "gguf"
+    model_path: "./models/Phi-3-medium-128k-instruct-IQ4_XS.gguf"
+    model_url: "https://huggingface.co/mmnga/Phi-3-medium-128k-instruct-gguf/resolve/main/Phi-3-medium-128k-instruct-IQ4_XS.gguf"
+    stance: 0
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題"]
+    chr_num: 100
+    temperature: 0.3
+    top_P: 0.8
+    max_Tokens: 2048
+    frequency_Penalty: 1.0
+    presence_Penalty:  1.5
+    context_Length: 2048
+    embedding: False
+    repeat_penalty: 0.8
+
+Llama-3-elyza-jp-8b:
+    model_type: "gguf"
+    model_path: "./models/Llama-3-ELYZA-JP-8B-q4_k_m.gguf"
+    model_url: "https://huggingface.co/elyza/Llama-3-ELYZA-JP-8B-GGUF/resolve/main/Llama-3-ELYZA-JP-8B-q4_k_m.gguf"
+    stance: 0
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細"]
+    chr_num: 100
+    temperature: 0.8
+    top_P: 0.8
+    max_Tokens: 1024
+    frequency_Penalty: 1.0
+    presence_Penalty:  1.5
+    context_Length: 1024
+    embedding: False
+    repeat_penalty: 0.8
+
+# models in API
+Gpt-4o:
+    model_path: "gpt-4o"
+    model_type: "openai"
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題"]
+    stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    chr_num: 100
+    temperature: 0.2
+    
+Gemini:
+    model_path: 
+        0: "gemini-1.5-pro"
+        1: "gemini-1.5-flash"
+        2: "gemini-1.0-pro"
+        3: "gemini-pro"
+    model_type: "gemini"
+    stance: 0
+    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題"]
+    chr_num: 100
+    temperature: 0.2
+    sleep: 60
+    
+Command-r-plus:
+    model_path: "command-r-plus"
+    model_type: "cohere"
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題"]
+    stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
+    chr_num: 100
+    temperature: 0.2
+    sleep: 180
+
+

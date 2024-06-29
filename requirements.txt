@@ -1,0 +1,13 @@
+pandas
+sentencepiece
+protobuf
+accelerate
+transformers=4.37.2
+huggingface_hub[cli]
+flash_attn
+pyyaml
+colorama
+cohere
+openai
+google.generativeai
+anthropic
