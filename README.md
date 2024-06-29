@@ -1,6 +1,7 @@
 # Utayomi
 短歌の一覧を指定したLLMに入力し、評を生成するシステムです。  
-* 設計・作成: ef_utakata(https://x.com/ef_utakata)
+* 設計・作成:
+    * ef_utakata(https://x.com/ef_utakata)
 
 ## 更新履歴
 * 2024年6月22日: 0.1.0 公開
@@ -102,11 +103,11 @@ python pipeline.py --list
 
 ## 出力ファイルの記述形式
 出力フォーマット:csv(UTF-8)
-* 先頭行(header):No,Tanka,Author,Author_comment,Comment,Comment_seed
+* 先頭行(header):No,Tanka,Author,Author_comment,LLM identifier
 * No: 通し番号(1から順番)
 * Tanka: 短歌
 * Author: 作者名
 * Author_comment: 作者コメント
-* Comment: AIによるコメント
-* Comment_seed: コメントの生成に使用したシード値(transformerとgguf形式のみ、それ以外はランダム)
+* LLM identifier: LLMによるコメント
+
 

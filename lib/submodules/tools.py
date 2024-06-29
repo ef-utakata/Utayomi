@@ -18,6 +18,8 @@ def tanka_preprocess(input_csv):
     else:
         df = df_raw[['Content','Author_comment','No','Author']]
         df = df.fillna("NaN")
+    # 空の行を除去
+    df = df.query('Content != "NaN"')
 
     df["Content"] = df["Content"].astype(str)
     df["Author_comment"] =df["Author_comment"].astype(str)
@@ -33,8 +35,7 @@ def tanka_preprocess(input_csv):
                         'Human_comment' : 'str'})
     else:
         df = df.astype({'No': 'int'})
-    # 空の行を除去
-    df = df.query('Content != "NaN"')
+
     return(df)
 
 # 完全新規の場合は出力結果と一時出力を生成、出力がある場合はmodel_identの行を含む一時出力を読み込み、その場所から再開
