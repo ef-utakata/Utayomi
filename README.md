@@ -25,32 +25,32 @@
 
 2024年6月29日時点で、以下のモデルを用いた入力短歌へのコメントの出力が可能です。
 
-* Umievo-itr012-Gleipnir-7B  
-https://huggingface.co/umiyuki/Umievo-itr012-Gleipnir-7B/tree/main
+* Umievo-itr012-Gleipnir-7B
+    * https://huggingface.co/umiyuki/Umievo-itr012-Gleipnir-7B/tree/main
 
-* Oumuamua-7b-instruct-v2  
-https://huggingface.co/nitky/Oumuamua-7b-instruct-v2
+* Oumuamua-7b-instruct-v2
+    * https://huggingface.co/nitky/Oumuamua-7b-instruct-v2
 
-* Phi-3-mini, Phi-3-medium  
-https://huggingface.co/microsoft
+* Phi-3-mini, Phi-3-medium
+    * https://huggingface.co/microsoft
 
 * Ninja-v1-RP  
-https://huggingface.co/Aratako/Ninja-v1-RP
+    * https://huggingface.co/Aratako/Ninja-v1-RP
 
 * Ninja-V2-7B  
-https://huggingface.co/Local-Novel-LLM-project/Ninja-V2-7B
+    * https://huggingface.co/Local-Novel-LLM-project/Ninja-V2-7B
 
 * Llama-3-elyza-jp-8b
-https://huggingface.co/elyza/Llama-3-ELYZA-JP-8B-GGUF
+    * https://huggingface.co/elyza/Llama-3-ELYZA-JP-8B-GGUF
 
 * Command-r-plus（API key必要）  
-https://huggingface.co/CohereForAI/c4ai-command-r-plus
+    * https://huggingface.co/CohereForAI/c4ai-command-r-plus
 
-* Gemini(API key必要、1.5-pro, 1.5-flash, 1.0-pro, gemini-pro の4つを自動で切り替えて対応します)  
-https://gemini.google.com/?hl=ja
+* Gemini(API key必要、1.5-pro, 1.5-flash, 1.0-pro, gemini-pro の4つを自動で切り替え)  
+    * https://gemini.google.com/?hl=ja
 
 * GPT-4o（API key必要）  
-https://platform.openai.com/docs/overview
+    * https://platform.openai.com/docs/overview
 
 APIでアクセスするモデルを利用する場合は、それぞれのモデルの配布元からAPI keyを取得し、以下の環境変数に入力する必要があります。
 * openAI: OPENAI_API_KEY
