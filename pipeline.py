@@ -13,7 +13,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 # libの自作モジュールをインポート
 from lib.submodules.tools import *
 from lib.submodules.model_load import *
-from lib.tanka_critic import tanka_critic
+from lib.tanka_critic import *
 
 ver = """Utayomi Version: 0.2.0
 設計: ef_utakata
@@ -28,7 +28,7 @@ parser.add_argument('-c','--config', default='./model_conf.yaml', help='利用�
 parser.add_argument('-i','--identifier', help='入力設定ファイル内の設定識別子(--listで一覧を確認可能)')
 
 # 実行モードの指定
-parser.add_argument('-m','--mode', help='実行モード{first(初回生成) / regen(再生成)} default: first', default='first') #regen
+parser.add_argument('-m','--mode', help='実行モード{first(初回生成) / utakai(要約)} default: first', default='first') #regen
 # お題の指定
 parser.add_argument('-t', '--theme',  help='お題(入力がない場合自由詠)', default=0)
 
@@ -85,7 +85,8 @@ with open(args.config, 'r') as yml:
 
 # 入力ファイルと出力先のパスを指定（途中生成がある場合はその部分から再開）
 df, df_temp_path, df_merged = output_preprocess(args.input, 
-                                                args.output, 
+                                                args.output,
+                                                args.mode,
                                                 ident)
 
 # model typeを読み込み、trf/ggufならモデルをロード, それ以外は詳細なモデルを指定
@@ -128,42 +129,61 @@ for index, row in df.iterrows():
 
         # for debug
         #print(row)
-            
-        # 短歌評を出力、推論に使用したシード値と中身を取得
-        seed, output = tanka_critic(ident,                 # modelごとに固有の処理が必要になった場合に備えて識別子を渡す
-                                    yml[ident],            # configをまとめてモジュールに渡す
-                                    theme,                 # お題
-                                    row['Content'],        # 短歌
-                                    row["Author"],         # 作者名
-                                    row['Author_comment'], # 作者コメント
-                                    Human_comment,         # 補助コメント
-                                    model,                 # model pathまたはロードしたモデル
-                                    tokenizer,             # ロードしたtokenaizerまたは0
-                                    row['No'],
-                                    seed_number)
 
-        # 処理時間の出力
-        end = datetime.datetime.now()
-        result1 = str(end-start_B)[0:7]
-        result2 = str(end-start_A)[0:7]
-        print(Fore.GREEN + "\n[MESSAGE]: 生成時間:" + result1  + Fore.RESET)
-        print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
+        seed = 0
+        output = 0
+        df_result = pd.DataFrame()
 
-        # 再生成判定
-        regen, regen_count = regen_decision(output,
-                                            yml[ident]["prohibit_list"], 
-                                            regen, yml[ident]["chr_num"], 
-                                            regen_count)
-            
-        # 再生成フラグに合わせて再生成+カウンターを1進める
-        if (len(regen) > 0):
-            regen_count += 1
-            print(Fore.YELLOW + "[MESSAGE]: 再生成します...[" + str(regen_count) + " 回目]\n"  + Fore.RESET)
-            
-    # シード値と出力結果をデータフレームに格納
-    df_result = pd.DataFrame({f'{ident}': output},
-                             index=[row['No']])
+        # 初回生成モード
+        if (args.mode == "first"):
+            # 短歌評を出力、推論に使用したシード値と中身を取得
+            seed, output = tanka_critic(ident,                 # modelごとに固有の処理が必要になった場合に備えて識別子を渡す
+                                        yml[ident],            # configをまとめてモジュールに渡す
+                                        theme,                 # お題
+                                        row['Content'],        # 短歌
+                                        row["Author"],         # 作者名
+                                        row['Author_comment'], # 作者コメント
+                                        Human_comment,         # 補助コメント
+                                        model,                 # model pathまたはロードしたモデル
+                                        tokenizer,             # ロードしたtokenaizerまたは0
+                                        row['No'],
+                                        seed_number)
 
+            # 処理時間の出力
+            end = datetime.datetime.now()
+            result1 = str(end-start_B)[0:7]
+            result2 = str(end-start_A)[0:7]
+            print(Fore.GREEN + "\n[MESSAGE]: 生成時間:" + result1  + Fore.RESET)
+            print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
+
+            # 再生成判定
+            regen, regen_count = regen_decision(output,
+                                                yml[ident]["prohibit_list"], 
+                                                regen, yml[ident]["chr_num"], 
+                                                regen_count)
+            
+            # 再生成フラグに合わせて再生成+カウンターを1進める
+            if (len(regen) > 0):
+                regen_count += 1
+                print(Fore.YELLOW + "[MESSAGE]: 再生成します...[" + str(regen_count) + " 回目]\n"  + Fore.RESET)
+
+            # シード値と出力結果をデータフレームに格納
+            df_result = pd.DataFrame({f'LLM:{ident}': output},
+                                     index=[row['No']])
+            
+        # 各LLMの出力をGeminiに要約させるモード
+        elif(args.mode == "utakai"):
+            output = utakai(theme, model, row)
+            
+            # 処理時間の出力
+            end = datetime.datetime.now()
+            result1 = str(end-start_B)[0:7]
+            result2 = str(end-start_A)[0:7]
+            print(Fore.GREEN + "\n[MESSAGE]: 生成時間:" + result1  + Fore.RESET)
+            print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
+            
+            df_result = pd.DataFrame({f'Utakai:{ident}': output},
+                                     index=[row['No']])
     
     # 出力先がある場合、そこに1行のみ追加書き込みする（ヘッダーはなしで）
     if (os.path.exists(df_temp_path)):

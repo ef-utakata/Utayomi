@@ -64,3 +64,29 @@ def tanka_critic(model_ident,
     #出力結果と使用したシード値を返す
     return(seed, output)
 
+# utakai
+def utakai(theme, model, row):
+    configs = ""
+    # LLMコメントがある列を抽出
+    LLMs = [s for s in row.keys() if s.startswith('LLM:')]
+    #for debug
+    #print(LLMs)
+    if(len(LLMs) < 2):
+        print(Fore.RED +"[ERROR]: コメント列が2つ以上ある出力結果を入力してください。" + Fore.RESET)
+        exit()
+        
+    sys, user, assist = utakai_prompt(theme, row, LLMs)
+    prompt = {"sys": sys,
+              "user": user,
+              "assist": assist}
+
+    output = gemini_generate(prompt, model, configs)
+    output = output.replace("\n\n", "\n")
+
+    print(output)
+    # sleep
+    print(Fore.YELLOW +"[MESSAGE]: sleep in " + str(60) + " secs..." + Fore.RESET)
+    time.sleep(60)
+    
+    return(output)
+

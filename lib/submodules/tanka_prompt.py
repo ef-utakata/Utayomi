@@ -128,3 +128,44 @@ def tanka_prompt(configs,
 
     return (sys, user, assist)
 
+# Utakaiモードのプロンプト
+def utakai_prompt(theme, row, LLMs):
+    sys = ""
+    user = ""
+    assist = ""
+    
+    # 自由詠
+    if(theme == 0):
+        sys = f"""あなたは、異なる評価者の複数のコメントを要約し、共通点や相違点について整理することのできるファシリテーターです。
+以下に、{row["Author"]}さんの短歌「{row["Content"]}」について、{str(len(LLMs))}人の異なる評価者によるコメントがあります。
+"""
+        LLM_num = 1
+        for LLM in LLMs:
+            row[f"{LLM}"] = row[f"{LLM}"].replace("\n\n", "\n")
+            user = user + f"\n{str(LLM_num)}人目の評価者のコメントは以下の通りです。\n"
+            user = user + "『" + row[f"{LLM}"] + "』\n"
+        
+            LLM_num  += 1
+            
+        prompt = sys + user + f"""\n以上の{str(len(LLMs))}個のコメントをまとめて、異なる評価内容があれば補足したコメントを生成してください。"""
+    # 題詠
+    else:
+        sys = f"""あなたは、異なる評価者の複数のコメントについて要約、整理することのできるファシリテーターです。
+以下に、{theme}というお題で{row["Author"]}さんが詠んだ短歌「{row["Content"]}」について、{str(len(LLMs))}人の異なる評価者によるコメントがあります。
+"""
+        user = ""
+        LLM_num = 1
+        for LLM in LLMs:
+            row[f"{LLM}"] = row[f"{LLM}"].replace("\n\n", "\n")
+            user = user + f"\n{str(LLM_num)}人目の評価者のコメントは以下の通りです。\n"
+            user = user + "『" + row[f"{LLM}"] + "』\n"
+        
+            LLM_num  += 1
+            
+        prompt = sys + user + f"""\n以上の{str(len(LLMs))}個のコメントをまとめて、異なる評価内容があれば補足したコメントを生成してください。"""
+        
+    return(sys, user, assist)
+    
+        
+
+    

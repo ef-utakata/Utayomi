@@ -39,15 +39,28 @@ def tanka_preprocess(input_csv):
     return(df)
 
 # 完全新規の場合は出力結果と一時出力を生成、出力がある場合はmodel_identの行を含む一時出力を読み込み、その場所から再開
-def output_preprocess(input_csv, output_dir, model_ident):
+def output_preprocess(input_csv, output_dir, mode, model_ident):
     
     df = pd.DataFrame()
     output_temp = "error"
     output_csv  = "error"
-
+    
+    basename_without_ext = os.path.splitext(os.path.basename(input_csv))[0]
+    # for debug
+    #print("basename_without_ext: " + basename_without_ext)
+    
+    if basename_without_ext.endswith('_result'):
+        output_csv  = output_dir + basename_without_ext + ".csv"
+        output_temp = output_dir + basename_without_ext + ".temp.csv"
+    else:
+        output_csv  = output_dir + basename_without_ext  + "_result.csv"
+        output_temp = output_dir + basename_without_ext + model_ident + ".temp.csv"
+    # for debug
+    #print("output_csv: " + output_csv)
+    
     # 入力ファイルと出力先のディレクトリが存在しない場合は終了
     if not os.path.exists(input_csv):
-        print(Fore.RED + "[ERROR]: " + "入力ファイル [" + input_dir + "] は存在しません。" + Fore.RESET)
+        print(Fore.RED + "[ERROR]: " + "入力ファイル [" + input_csv + "] は存在しません。" + Fore.RESET)
         exit()
     if not os.path.exists(output_dir):
         print(Fore.RED + "[ERROR]: " + "出力ディレクトリ [" + output_dir + "] は存在しません。" + Fore.RESET)
@@ -61,29 +74,41 @@ def output_preprocess(input_csv, output_dir, model_ident):
 
     # 入力と出力先がある場合、統合済みの出力の有無を確認
     else:
-        basename_without_ext = os.path.splitext(os.path.basename(input_csv))[0]
-        output_csv  = output_dir + basename_without_ext  + "_result.csv"
-        output_temp = output_dir + basename_without_ext + model_ident + ".temp.csv"
-        
-        # 新規に出力する場合、出力対象の一覧を前処理してすべての列を返す
-        if not os.path.exists(output_csv):
-            df = tanka_preprocess(input_csv)
+        # 通常生成モードの場合
+        if (mode == "first"):
+            # 新規に出力する場合、出力対象の一覧を前処理してすべての列を返す
+            if not os.path.exists(output_csv):
+                df = tanka_preprocess(input_csv)
             
-        # 出力済みの一覧がある場合、生成途中のリストを読み込んで途中のものを返す
-        else:
-            # 生成途中のリストがない場合、出力済み一覧をそのまま解析対象として返す
-            if not os.path.exists(output_temp):
-                print(Fore.YELLOW + "[MESSAGE]: [" + model_ident + "]による生成を開始します。" + Fore.RESET)
-                df = pd.read_csv(output_csv, index_col=0)
-            
-            # 生成途中のリストがある場合、生成済みの行は飛ばして入力
+            # 出力済みの一覧がある場合、生成途中のリストを読み込んで途中のものを返す
             else:
+                # 生成途中のリストがない場合、出力済み一覧をそのまま解析対象として返す
+                if not os.path.exists(output_temp):
+                    print(Fore.YELLOW + "[MESSAGE]: [" + model_ident + "]による生成を開始します。" + Fore.RESET)
+                    df = pd.read_csv(output_csv, index_col=0)
+            
+                # 生成途中のリストがある場合、生成済みの行は飛ばして入力
+                else:
+                    df = pd.read_csv(output_csv, index_col=0)
+                    length = len(pd.read_csv(output_temp))
+                    print(Fore.YELLOW + "[MESSAGE]: " + " No." + str(length) + "から[" + model_ident + "]による生成を再開します。" + Fore.RESET)
+                    query = "No > " + str(length)
+                    df = df.query(query)
+                    
+        # 歌会モードの場合
+        elif (mode == "utakai"):
+            if not os.path.exists(output_temp):
+                print(Fore.YELLOW + "[MESSAGE]: [" + model_ident + "]によるコメントの要約を開始します。" + Fore.RESET)
                 df = pd.read_csv(output_csv, index_col=0)
+            else:
                 length = len(pd.read_csv(output_temp))
-                print(Fore.YELLOW + "[MESSAGE]: " + " No." + str(length) + "から[" + model_ident + " ]による生成を再開します。" + Fore.RESET)
+                print(Fore.YELLOW + "[MESSAGE]: " + " No." + str(length) + "から[" + model_ident + "]によるコメントの要約を再開します。" + Fore.RESET)
+                df = pd.read_csv(output_csv, index_col=0)
                 query = "No > " + str(length)
                 df = df.query(query)
-                
+    # for debug
+    #print(df)
+    
     #各列のデータ型の割り当て
     if ("Human_comment" in df.columns):
         df = df.astype({'No': 'int',

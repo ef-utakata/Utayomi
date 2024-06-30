@@ -110,4 +110,8 @@ python pipeline.py --list
 * Author_comment: 作者コメント
 * LLM identifier: LLMによるコメント
 
+## 歌会モード
+複数のLLMからのコメントをGeminiに入力し、共通点や相違点についての要約を出力するモードです。  
+引数mに"utakai"を指定、iをGeminiに設定し、入力ファイルを各LLMからのコメントが記述されたCSVを指定すると実行されます。
+notebook中に実行例を記載しています。  
 
