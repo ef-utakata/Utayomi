@@ -99,9 +99,14 @@ python pipeline.py --list
 
 これらをシステム上の対応モデルに入力して生成したコメントは、output/demoディレクトリ内にあります。
 
-* input/ef_test_free_Ninja-v2-7b.csv: 自由詠
-* input/ef_test_theme_Ninja-v2-7b.csv: 題詠（お題：「海」）の例
-* input/ef_test_theme_sea_human_comment_Ninja-v2-7b.csv: 題詠の出力されたAI評に対するコメントを入力した例
+* input/ef_test_free_Ninja-v2-7b.csv:
+    * 自由詠(歌会モードで出力された列を含む)
+
+* input/ef_test_theme_Ninja-v2-7b.csv:
+    * 題詠（お題：「海」）
+
+* input/ef_test_theme_sea_human_comment_Ninja-v2-7b.csv:
+    * AI評に対するコメントを入力したもの
 
 ## 出力ファイルの記述形式
 出力フォーマット:csv(UTF-8)
