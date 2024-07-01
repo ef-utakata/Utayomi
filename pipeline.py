@@ -229,8 +229,21 @@ if len(df_integ) == len(df_temp):
     
     df_out = pd.concat([df_integ, df_temp], axis=1)
     
+    # read_csv時にindexが付加されている場合は削除
     if ("Unnamed: 0" in df_out):
         del df_out["Unnamed: 0"]
+
+    # 列の順番を並び替え
+    LLMs = [s for s in df_out.columns.values if s.startswith('LLM:')]
+    LLMs = sorted(LLMs)
+    if ('Utakai:Gemini' in df_out.columns):
+        list_col = ['No','Content','Author_comment','Author','Utakai:Gemini'] + LLMs
+    else:
+        list_col = ['No','Content','Author_comment','Author'] + LLMs
+        
+    df_out = df_out[list_col]
+    
+    # 出力
     df_out.to_csv(df_merged, mode='x')
 
 else:
