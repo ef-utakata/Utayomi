@@ -66,6 +66,7 @@ def tanka_critic(model_ident,
 
 # utakai
 def utakai(theme, model, row):
+    
     configs = ""
     # LLMコメントがある列を抽出
     LLMs = [s for s in row.keys() if s.startswith('LLM:')]
@@ -90,3 +91,27 @@ def utakai(theme, model, row):
     
     return(output)
 
+# rensak
+def rensak(theme, model, row):
+    print(Fore.YELLOW +"[MESSAGE]: 連作モードによるコメントの生成を実行します。" + Fore.RESET)
+    configs = ""
+
+    #for debug
+    #print(LLMs)
+
+    # prompt生成
+    sys, user, assist = rensak_prompt(theme, row)
+    prompt = {"sys": sys,
+              "user": user,
+              "assist": assist}
+
+    # promptをgeminiに投入
+    output = gemini_generate(prompt, model, configs)
+    output = output.replace("\n\n", "\n")
+
+    print(output)
+    # sleep
+    print(Fore.YELLOW +"[MESSAGE]: sleep in " + str(60) + " secs..." + Fore.RESET)
+    time.sleep(60)
+    
+    return(output)

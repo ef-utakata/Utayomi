@@ -5,20 +5,20 @@ Umievo:
     model_type: "trf"
     stance: 0
     #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型"]
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
     temperature: 0.8
     chr_num: 100
     Max_Tokens: 1024
     min_new_tokens: 400
     Top_P: 0.95
-    sleep: 1
+    patience_num: 15
     
 Oumuamua: 
     model_path: "./models/Oumuamua-7b-instruct.Q5_K_M.gguf"
     model_url: "https://huggingface.co/QuantFactory/Oumuamua-7b-instruct-GGUF/resolve/main/Oumuamua-7b-instruct.Q5_K_M.gguf"
     model_type: "gguf"
     stance: 0
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "定型", "詳細"]
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
     temperature: 0.8
     chr_num: 100
     top_P: 0.8
@@ -28,6 +28,7 @@ Oumuamua:
     context_Length: 1024
     embedding: False
     repeat_penalty: 0.8
+    patience_num: 15
 
 Phi-3-mini:
     model_path: "microsoft/Phi-3-mini-4k-instruct"
@@ -38,6 +39,7 @@ Phi-3-mini:
     temperature: 0.8
     chr_num: 100
     Max_Tokens: 1024
+    patience_num: 15
 
 Ninja-v1-rp: 
     model_path: "Aratako/Ninja-v1-RP"
@@ -50,6 +52,7 @@ Ninja-v1-rp:
     Max_Tokens: 700
     repetition_penalty: 1.4
     Top_P: 0.95
+    patience_num: 15
     
 Ninja-v2-7b: 
     model_path: "Local-Novel-LLM-project/Ninja-V2-7B"
@@ -62,6 +65,7 @@ Ninja-v2-7b:
     Max_Tokens: 700
     repetition_penalty: 1.1
     Top_P: 0.95
+    patience_num: 15
     
 Phi-3-medium:
     model_type: "gguf"
@@ -78,13 +82,14 @@ Phi-3-medium:
     context_Length: 2048
     embedding: False
     repeat_penalty: 0.8
+    patience_num: 15
 
 Llama-3-elyza-jp-8b:
     model_type: "gguf"
     model_path: "./models/Llama-3-ELYZA-JP-8B-q4_k_m.gguf"
     model_url: "https://huggingface.co/elyza/Llama-3-ELYZA-JP-8B-GGUF/resolve/main/Llama-3-ELYZA-JP-8B-q4_k_m.gguf"
     stance: 0
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細"]
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
     chr_num: 100
     temperature: 0.8
     top_P: 0.8
@@ -94,6 +99,7 @@ Llama-3-elyza-jp-8b:
     context_Length: 1024
     embedding: False
     repeat_penalty: 0.8
+    patience_num: 15
 
 # models in API
 Gpt-4o:
@@ -103,6 +109,7 @@ Gpt-4o:
     stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
     chr_num: 100
     temperature: 0.2
+    patience_num: 2
     
 Gemini:
     model_path: 
@@ -117,6 +124,7 @@ Gemini:
     chr_num: 100
     temperature: 0.2
     sleep: 60
+    patience_num: 2
     
 Command-r-plus:
     model_path: "command-r-plus"
@@ -126,5 +134,6 @@ Command-r-plus:
     chr_num: 100
     temperature: 0.2
     sleep: 180
+    patience_num: 2
 
 

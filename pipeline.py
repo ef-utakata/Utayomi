@@ -28,7 +28,7 @@ parser.add_argument('-c','--config', default='./model_conf.yaml', help='利用�
 parser.add_argument('-i','--identifier', help='入力設定ファイル内の設定識別子(--listで一覧を確認可能)')
 
 # 実行モードの指定
-parser.add_argument('-m','--mode', help='実行モード{first(初回生成) / utakai(要約)} default: first', default='first') #regen
+parser.add_argument('-m','--mode', help='実行モード{first(単作) / rensak(連作) /utakai(要約)} default: first', default='first') #regen
 # お題の指定
 parser.add_argument('-t', '--theme',  help='お題(入力がない場合自由詠)', default=0)
 
@@ -157,10 +157,19 @@ for index, row in df.iterrows():
             print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
 
             # 再生成判定
+            NG_word = []            
+            for word in yml[ident]["prohibit_list"]:
+                if word in row['Content']:
+                    print(Fore.YELLOW + "\n[MESSAGE]: 短歌本体に[" + word + "]が含まれています。NGリストからは削除します..." + Fore.RESET)
+                else:
+                    NG_word = NG_word + [f"{word}"]
+
+            # 再生成判定
             regen, regen_count = regen_decision(output,
-                                                yml[ident]["prohibit_list"], 
+                                                NG_word, 
                                                 regen, yml[ident]["chr_num"], 
-                                                regen_count)
+                                                regen_count,
+                                                yml[ident]["patience_num"])
             
             # 再生成フラグに合わせて再生成+カウンターを1進める
             if (len(regen) > 0):
@@ -169,6 +178,20 @@ for index, row in df.iterrows():
 
             # シード値と出力結果をデータフレームに格納
             df_result = pd.DataFrame({f'LLM:{ident}': output},
+                                     index=[row['No']])
+
+        # 連作を評価するモード
+        elif(args.mode == "rensak"):
+            output = rensak(theme, model, row)
+            
+            # 処理時間の出力
+            end = datetime.datetime.now()
+            result1 = str(end-start_B)[0:7]
+            result2 = str(end-start_A)[0:7]
+            print(Fore.GREEN + "\n[MESSAGE]: 生成時間:" + result1  + Fore.RESET)
+            print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
+            
+            df_result = pd.DataFrame({f'{ident}': output},
                                      index=[row['No']])
             
         # 各LLMの出力をGeminiに要約させるモード

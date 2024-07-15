@@ -15,27 +15,33 @@ def tanka_preprocess(input_csv):
         df = df_raw[['Content','Author_comment','No','Author','Human_comment']]
         df["Human_comment"] =df["Human_comment"].astype(str)
         df = df.fillna("NaN")
+    #連作モードの場合の処理
+    elif("count" in df_raw.columns):
+        df = df_raw[['No','Title','Content','count','Author']]
+        df = df.fillna("NaN")
+    #単作、Human assistナシの場合の処理
     else:
         df = df_raw[['Content','Author_comment','No','Author']]
         df = df.fillna("NaN")
+
     # 空の行を除去
     df = df.query('Content != "NaN"')
 
     df["Content"] = df["Content"].astype(str)
-    df["Author_comment"] =df["Author_comment"].astype(str)
+    if("Author_comment" in df_raw.columns):
+        df["Author_comment"] =df["Author_comment"].astype(str)
+        df["Author_comment"] = df["Author_comment"].str.replace("\r", "")
+        df["Author_comment"] = df["Author_comment"].str.replace("\n", "")
+    if not ("count" in df_raw.columns):
+        df["Content"] = df["Content"].str.replace("\r", "")
+        df["Content"] = df["Content"].str.replace("\n", "")
     
-    df["Content"] = df["Content"].str.replace("\r", "")
-    df["Content"] = df["Content"].str.replace("\n", "")
-    df["Author_comment"] = df["Author_comment"].str.replace("\r", "")
-    df["Author_comment"] = df["Author_comment"].str.replace("\n", "")
-
     #各列のデータ型の割り当て
     if ("Human_comment" in df_raw.columns):
         df = df.astype({'No': 'int',
                         'Human_comment' : 'str'})
     else:
         df = df.astype({'No': 'int'})
-
     return(df)
 
 # 完全新規の場合は出力結果と一時出力を生成、出力がある場合はmodel_identの行を含む一時出力を読み込み、その場所から再開
@@ -57,7 +63,10 @@ def output_preprocess(input_csv, output_dir, mode, model_ident):
         output_temp = output_dir + basename_without_ext + model_ident + ".temp.csv"
     # for debug
     #print("output_csv: " + output_csv)
-    
+    # 末尾にスラッシュがない場合付与
+    if not output_dir.endswith('/'):
+        output_dir = output_dir + "/"
+
     # 入力ファイルと出力先のディレクトリが存在しない場合は終了
     if not os.path.exists(input_csv):
         print(Fore.RED + "[ERROR]: " + "入力ファイル [" + input_csv + "] は存在しません。" + Fore.RESET)
@@ -79,6 +88,8 @@ def output_preprocess(input_csv, output_dir, mode, model_ident):
             # 新規に出力する場合、出力対象の一覧を前処理してすべての列を返す
             if not os.path.exists(output_csv):
                 df = tanka_preprocess(input_csv)
+                # for debug
+                #print(df)
             
             # 出力済みの一覧がある場合、生成途中のリストを読み込んで途中のものを返す
             else:
@@ -100,12 +111,37 @@ def output_preprocess(input_csv, output_dir, mode, model_ident):
             if not os.path.exists(output_temp):
                 print(Fore.YELLOW + "[MESSAGE]: [" + model_ident + "]によるコメントの要約を開始します。" + Fore.RESET)
                 df = pd.read_csv(output_csv, index_col=0)
+                #print(df)
             else:
                 length = len(pd.read_csv(output_temp))
                 print(Fore.YELLOW + "[MESSAGE]: " + " No." + str(length) + "から[" + model_ident + "]によるコメントの要約を再開します。" + Fore.RESET)
                 df = pd.read_csv(output_csv, index_col=0)
                 query = "No > " + str(length)
                 df = df.query(query)
+                
+        # 連作モードの場合
+        if (mode == "rensak"):
+            print(Fore.YELLOW + "[MESSAGE]: [" + model_ident + "]による連作モードを開始します。" + Fore.RESET)
+            # 新規に出力する場合、出力対象の一覧を前処理してすべての列を返す
+            if not os.path.exists(output_csv):
+                df = tanka_preprocess(input_csv)
+                # for debug
+                #print(df)
+            
+            # 出力済みの一覧がある場合、生成途中のリストを読み込んで途中のものを返す
+            else:
+                # 生成途中のリストがない場合、出力済み一覧をそのまま解析対象として返す
+                if not os.path.exists(output_temp):
+                    print(Fore.YELLOW + "[MESSAGE]: [" + model_ident + "]による生成を開始します。" + Fore.RESET)
+                    df = pd.read_csv(output_csv, index_col=0)
+            
+                # 生成途中のリストがある場合、生成済みの行は飛ばして入力
+                else:
+                    df = pd.read_csv(output_csv, index_col=0)
+                    length = len(pd.read_csv(output_temp))
+                    print(Fore.YELLOW + "[MESSAGE]: " + " No." + str(length) + "から[" + model_ident + "]による生成を再開します。" + Fore.RESET)
+                    query = "No > " + str(length)
+                    df = df.query(query)
     # for debug
     #print(df)
     
@@ -115,13 +151,16 @@ def output_preprocess(input_csv, output_dir, mode, model_ident):
                         'Human_comment' : 'str',
                         'Author_comment' :'str'})
     else:
-        df = df.astype({'No': 'int',
-                        'Author_comment' :'str'})
+        # for debug
+        #print(df.columns)
+        if ('Author_comment' in df.columns):
+            df = df.astype({'No': 'int',
+                            'Author_comment' :'str'})
     # コメント出力対象と一時出力のパスと統合を返す
     return(df, output_temp, output_csv)
 
 # LLMに評の再生成を命じる条件をここで指定
-def regen_decision(output, prohibit_list, regen, chr_num, regen_count):
+def regen_decision(output, prohibit_list, regen, chr_num, regen_count, patience_num):
     # 禁止ワードリストを受け取ってある場合は再生成フラグを追加
     for word in prohibit_list:
         if word in output:
@@ -129,7 +168,7 @@ def regen_decision(output, prohibit_list, regen, chr_num, regen_count):
             regen = regen + [1]
             
     # 再生成が5回を超えている場合はフラグを0にしてwhileループから抜ける
-    if (regen_count > 5):
+    if (regen_count > patience_num):
         print(Fore.YELLOW + "\n[MESSAGE]: " + str(regen_count) + "回再生成しています。不適切な再生成ワードが指定されている可能性があります。"  + Fore.RESET)
         regen = []
 

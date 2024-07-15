@@ -128,7 +128,7 @@ def tanka_prompt(configs,
 
     return (sys, user, assist)
 
-# Utakaiモードのプロンプト
+# 歌会モードのプロンプト生成
 def utakai_prompt(theme, row, LLMs):
     sys = ""
     user = ""
@@ -147,7 +147,10 @@ def utakai_prompt(theme, row, LLMs):
         
             LLM_num  += 1
             
-        prompt = sys + user + f"""\n以上の{str(len(LLMs))}個のコメントをまとめて、異なる評価内容があれば補足したコメントを生成してください。"""
+        prompt = sys + user + f"""\n以上の{str(len(LLMs))}個のコメントを以下の基準で要約してください。
+1. 評価者間の共通点
+2. 評価者間の相違点
+最後に、ファシリテーターとしてのコメントを補足してください。"""
     # 題詠
     else:
         sys = f"""あなたは、異なる評価者の複数のコメントについて要約、整理することのできるファシリテーターです。
@@ -162,10 +165,40 @@ def utakai_prompt(theme, row, LLMs):
         
             LLM_num  += 1
             
-        prompt = sys + user + f"""\n以上の{str(len(LLMs))}個のコメントをまとめて、異なる評価内容があれば補足したコメントを生成してください。"""
+        prompt = sys + user + f"""\n以上の{str(len(LLMs))}個のコメントを以下の基準で要約してください。
+1. 評価者間の共通点
+2. 評価者間の相違点
+最後に、ファシリテーターとしてのコメントを補足してください。"""
         
     return(sys, user, assist)
+
+# 連作モードのプロンプト生成
+def rensak_prompt(theme, row):
+    sys = ""
+    user = ""
+    assist = ""
     
-        
+        # 自由詠
+    if(theme == 0):
+        sys = f"""あなたは短歌の表現や内容を評価することのできる役立つアシスタントです。
+以下は{row["Author"]}さんによる{row["count"]}首からなる短歌連作で、タイトルは「{row["Title"]}」です。
+
+{row["Content"]}
+
+この連作の表現や内容について、各短歌間のつながりを踏まえて考察した詳細な文章を出力してください。
+"""
+    return(sys, user, assist)
+
+
+
+
+
+
+
+
+
+
+
+
 
     
