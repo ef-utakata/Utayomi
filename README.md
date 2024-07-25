@@ -13,7 +13,9 @@
     * 歌会モード（複数LLMの出力をGeminiにファシリテーションさせるモード）追加
 * 2024年7月15日: 0.4.0 公開
     * 歌会モードのmarkdown出力に対応  
-
+* 2024年7月25日: 0.5.0 公開
+    * 対応モデルの追加, llama-cliで動作するモデルの実行に対応
+      
 ## ToDo
 - [x] 連作入力対応
 - [x] 複数LLMの出力をファシリテーションするモード
@@ -28,19 +30,22 @@
 4. cohere APIで利用できるモデル(Command r+)
 5. google.generativeai APIで利用できるモデル(Gemini-1.5-proなど)
 
-2024年6月29日時点で、以下のモデルを用いた入力短歌へのコメントの出力が可能です。
+2024年7月25日時点で、以下のモデルを用いた入力短歌へのコメントの出力が可能です。
+
+* HODACHI-EZO-Common-9B-gemma-2
+    * https://huggingface.co/mmnga/HODACHI-EZO-Common-9B-gemma-2-it-gguf
+    * 
+* gemma-2-27b
+    * https://huggingface.co/legraphista/gemma-2-27b-it-IMat-GGUF
+
+* Shadows-MoE
+    * https://huggingface.co/Local-Novel-LLM-project/Shadows-MoE-GGUF
 
 * Umievo-itr012-Gleipnir-7B
     * https://huggingface.co/umiyuki/Umievo-itr012-Gleipnir-7B/tree/main
 
 * Oumuamua-7b-instruct-v2
     * https://huggingface.co/nitky/Oumuamua-7b-instruct-v2
-
-* Phi-3-mini, Phi-3-medium
-    * https://huggingface.co/microsoft
-
-* Ninja-v1-RP  
-    * https://huggingface.co/Aratako/Ninja-v1-RP
 
 * Ninja-V2-7B  
     * https://huggingface.co/Local-Novel-LLM-project/Ninja-V2-7B
@@ -56,6 +61,7 @@
 
 * GPT-4o（API key必要）  
     * https://platform.openai.com/docs/overview
+
 
 APIでアクセスするモデルを利用する場合は、それぞれのモデルの配布元からAPI keyを取得し、以下の環境変数に入力する必要があります。
 * openAI: OPENAI_API_KEY
