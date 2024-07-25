@@ -9,3 +9,4 @@ lib/submodules/.ipynb_checkpoints
 lib/__pycache__
 lib/submodules/__pycache__
 input/.*
+llama.cpp

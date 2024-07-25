@@ -42,6 +42,10 @@ def model_input(model_ident,
     # llama-cpp-python
     elif (model_type == "gguf"):
         output = llama_cpp_generate(prompt, model, configs, seed_num)
+        
+    # llama-cpp
+    elif (model_type == "llamacli"):
+        output = llamacli_generate(prompt, model, configs, seed_num)
 
     # huggingfaceで入出力を行うモデル
     elif (model_type == "trf"):
@@ -54,13 +58,12 @@ def model_input(model_ident,
         # Phi-3-mini
         elif(model_ident == "Phi-3-mini"):
             output = phi_mini_generate(prompt, tokenizer, model, configs, seed_num)
-        # Ninja-V1-RP
-        elif(model_ident == "Ninja-v1-rp"):
-            output = ninja_generate(prompt, tokenizer, model, configs, seed)
         # Ninja-V2-7B
         elif(model_ident == "Ninja-v2-7b"):
             output = ninja_generate(prompt, tokenizer, model, configs, seed)
-
+        # Shadows-MoE
+        elif(model_ident == "Shadows-moe"):
+            output = ninja_generate(prompt, tokenizer, model, configs, seed)
     
     # エラーメッセージの表示
     if (output == 0):

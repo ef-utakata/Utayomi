@@ -49,3 +49,8 @@ export CUDACXX="/usr/local/cuda-12/bin/nvcc"
 export CMAKE_ARGS="-DLLAMA_CUBLAS=on -DCMAKE_CUDA_ARCHITECTURES=all-major"
 export FORCE_CMAKE=1 
 pip install fsspec llama-cpp-python --no-cache-dir --force-reinstall --upgrade
+
+## llama-cppをリポジトリ内にコンパイル
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp
+make GGML_CUDA=1

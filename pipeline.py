@@ -97,6 +97,9 @@ if (model_type == "trf"):
     model, tokenizer = trf_load(yml[ident])
 elif(model_type == "gguf"):
     model, tokenizer = gguf_load(yml[ident])
+elif(model_type == "llamacpp"):
+    model = yml[ident]["model_path"]
+    tokenizer = "null"
 
 # 解析状況出力のための数値を格納
 total_len = len(df)
@@ -259,8 +262,10 @@ if len(df_integ) == len(df_temp):
     # 列の順番を並び替え
     LLMs = [s for s in df_out.columns.values if s.startswith('LLM:')]
     LLMs = sorted(LLMs)
+    # 歌会モードの場合、markdown形式のファイルを出力
     if ('Utakai:Gemini' in df_out.columns):
-        list_col = ['No','Content','Author_comment','Author','Utakai:Gemini'] + LLMs
+        list_col = ['No','Content','Author_comment','Author'] + LLMs
+        utakai_markdown(df_out, out_csv)
     else:
         list_col = ['No','Content','Author_comment','Author'] + LLMs
         

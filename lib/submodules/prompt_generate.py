@@ -1,7 +1,54 @@
+import subprocess
+import yaml
+import glob
 import os
 import torch
 import time
 from lib.submodules.tools import *
+
+# llamacpp
+def llamacli_generate(prompt, model, configs, seed_num):
+
+    #改行を除去
+    user = prompt["user"] + prompt["assist"] 
+    user = user.replace("\n", "")
+
+    temp = configs["temperature"]
+    repeat_penalty = configs["repeat_penalty"]
+    seed = seed_num
+    logdir = "./output"
+
+    # llama.cppの実行バイナリ
+    llamacli = "./llama.cpp/llama-cli"
+    
+    # コマンドは一つの文字列として指定
+    cmd = f"""{llamacli} -m {model} \
+--temp {temp} \
+-p {user} \
+-s {seed} \
+--repeat-penalty {repeat_penalty} \
+--no-escape \
+--log-disable \
+--color \
+-ld {logdir}"""
+    
+    # コマンドを実行、yaml出力
+    result = subprocess.run(cmd, shell=True)
+
+    # 出力されたyamlを読み込み
+    targetPattern = r"./output/*.yml"
+    out = glob.glob(targetPattern)
+    
+    # yamlから出力を抽出
+    with open(out[0]) as file:
+        yml = yaml.load(file, Loader=yaml.FullLoader)
+        output = yml["output"]
+
+    # logファイルを消去
+    remove = f"rm {out[0]}"
+    subprocess.run(remove, shell=True)
+    
+    return(output)
 
 # gemini
 def gemini_generate(prompt, model, configs):
@@ -226,10 +273,22 @@ ASSISTANT: {Assist}""".format(Sys = prompt["sys"],
 # llama-cpp-python test
 def llama_cpp_generate(prompt, model, configs, seed_num):
     import llama_cpp
-    output = model.create_chat_completion(messages=[{"role": "system", "content": prompt["sys"]},
-                                                    {"role": "user", "content": prompt["user"]},
-                                                    {"role": "assist", "content": prompt["assist"]},
-                                                   ],
+    
+    message_list = []
+    # gemma由来モデルはsystemロールがないので除去
+    if "gemma" in configs["model_path"]:
+        message_list = [{"role": "user", "content": prompt["user"]},
+                        {"role": "assist", "content": prompt["assist"]},
+                       ]
+    # それ以外のモデルはsystemロールを付与
+    else:
+        message_list = [{"role": "system", "content": prompt["sys"]},
+                        {"role": "user", "content": prompt["user"]},
+                        {"role": "assist", "content": prompt["assist"]},
+                       ]
+        
+    
+    output = model.create_chat_completion(messages=message_list,
                                           temperature=configs["temperature"],
                                           seed = seed_num,
                                           top_p=configs["top_P"],

@@ -1,5 +1,61 @@
 # 登録モデルごとのconfig
-# models in transformers
+Shadows-moe: 
+    model_path: "./models/Shadows-MoE-Q6.gguf"
+    model_url: "https://huggingface.co/Local-Novel-LLM-project/Shadows-MoE-GGUF/resolve/main/Shadows-MoE-Q6.gguf"
+    # trf, gguf, llamacliを指定
+    model_type: "gguf"
+    # 評者のスタンスを調整する場合はテキスト
+    stance: 0
+    # 再生成ワード
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
+    temperature: 0.8
+    top_P: 0.95
+    max_Tokens: 1024
+    chr_num: 100
+    repeat_penalty: 1.1
+    # 再生成の許容回数
+    patience_num: 15
+    presence_Penalty:  1.5
+    context_Length: 1024
+    embedding: False
+    patience_num: 15
+    
+Ezo-common-9B: 
+    model_path: "./models/HODACHI-EZO-Common-9B-gemma-2-it-Q4_K_M.gguf"
+    model_url: "https://huggingface.co/mmnga/HODACHI-EZO-Common-9B-gemma-2-it-gguf/resolve/main/HODACHI-EZO-Common-9B-gemma-2-it-Q4_K_M.gguf"
+    # trf, gguf, llamacliを指定
+    model_type: "gguf"
+    # 評者のスタンスを調整する場合はテキスト
+    stance: 0
+    # 再生成ワード
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
+    temperature: 0.8
+    top_P: 0.95
+    max_Tokens: 1024
+    chr_num: 100
+    repeat_penalty: 0.8
+    # 再生成の許容回数
+    patience_num: 15
+    presence_Penalty:  1.5
+    context_Length: 1024
+    embedding: False
+    patience_num: 15
+
+Gemma-27b: 
+    model_path: "./models/gemma-2-27b-it.Q3_k_m.gguf"
+    model_url: "https://huggingface.co/legraphista/gemma-2-27b-it-IMat-GGUF/resolve/main/gemma-2-27b-it.Q3_K.gguf"
+    # trf, gguf, llamacliを指定
+    model_type: "llamacli"
+    # 評者のスタンスを調整する場合はテキスト
+    stance: 0
+    # 再生成ワード
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
+    temperature: 0.8
+    chr_num: 100
+    repeat_penalty: 1.1
+    # 再生成の許容回数
+    patience_num: 5
+
 Umievo:
     model_path: "umiyuki/Umievo-itr012-Gleipnir-7B"
     model_type: "trf"
@@ -29,61 +85,24 @@ Oumuamua:
     embedding: False
     repeat_penalty: 0.8
     patience_num: 15
-
-Phi-3-mini:
-    model_path: "microsoft/Phi-3-mini-4k-instruct"
-    model_type: "trf"
-    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
-    stance: 0
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細", "季語"]
-    temperature: 0.8
-    chr_num: 100
-    Max_Tokens: 1024
-    patience_num: 15
-
-Ninja-v1-rp: 
-    model_path: "Aratako/Ninja-v1-RP"
-    model_type: "trf"
-    #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
-    stance: 0
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細", "季語"]
-    temperature: 0.8
-    chr_num: 100
-    Max_Tokens: 700
-    repetition_penalty: 1.4
-    Top_P: 0.95
-    patience_num: 15
     
 Ninja-v2-7b: 
-    model_path: "Local-Novel-LLM-project/Ninja-V2-7B"
-    model_type: "trf"
+    model_path: "./models/Ninja-V2-7B.Q5_K_M.gguf"
+    model_url: "https://huggingface.co/QuantFactory/Ninja-V2-7B-GGUF/resolve/main/Ninja-V2-7B.Q5_K_M.gguf"
+    model_type: "gguf"
     #stance: "評価にあたっては、間違った解釈をすることを恐れずなるべく詳細な文章を出力する。"
     stance: 0
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "定型", "詳細", "季語"]
+    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題", "形式", "詳細", "季語", "定型", "リズム", "5・7・5", "五・七・五", "575", "五七五"]
     temperature: 0.8
     chr_num: 100
-    Max_Tokens: 700
-    repetition_penalty: 1.1
-    Top_P: 0.95
+    patience_num: 15
+    top_P: 0.8
+    max_Tokens: 1024
+    context_Length: 1024
+    embedding: False
+    repeat_penalty: 1.1
     patience_num: 15
     
-Phi-3-medium:
-    model_type: "gguf"
-    model_path: "./models/Phi-3-medium-128k-instruct-IQ4_XS.gguf"
-    model_url: "https://huggingface.co/mmnga/Phi-3-medium-128k-instruct-gguf/resolve/main/Phi-3-medium-128k-instruct-IQ4_XS.gguf"
-    stance: 0
-    prohibit_list: ["17","誤","タイトル","十七","俳句","１７", "表題"]
-    chr_num: 100
-    temperature: 0.3
-    top_P: 0.8
-    max_Tokens: 2048
-    frequency_Penalty: 1.0
-    presence_Penalty:  1.5
-    context_Length: 2048
-    embedding: False
-    repeat_penalty: 0.8
-    patience_num: 15
-
 Llama-3-elyza-jp-8b:
     model_type: "gguf"
     model_path: "./models/Llama-3-ELYZA-JP-8B-q4_k_m.gguf"

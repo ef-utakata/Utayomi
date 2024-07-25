@@ -194,3 +194,34 @@ def get_tokens_as_list(word_list, tokenizer):
         tokenized_word = tokenizer([word], add_special_tokens=False).input_ids[0]
         tokens_list.append(tokenized_word)
     return tokens_list
+
+# 歌会モードの結果を作者順でソートし、markdown形式のファイルで出力
+def utakai_markdown(df, out_csv):
+    
+    basename_without_ext = os.path.splitext(os.path.basename(out_csv))[0]
+    
+    
+    df = df.sort_values('Author')
+
+    with open(out_csv, mode='w') as f:
+        for index, row in df.iterrows():
+            f.write("\n## 投稿歌\n")
+            f.write("**" + row['Content'] + "**\n")
+            f.write("## 作者\n")
+            f.write(str(row['Author']))
+            f.write("\n")
+            sub = row['Utakai:Gemini'].replace("\n**", "\n### **")
+            test = sub
+            
+            # Geminiが拒否した場合はLLMのコメントをそのまま掲載
+            if row['Utakai:Gemini'] == "ERROR":
+                sub = "* Geminiの入力エラーで要約が実行できなかったため、各LLMからのコメントをそのまま掲載します。  \n"
+                f.write(sub)
+                LLMs = [s for s in df.columns.values if s.startswith('LLM:')]
+                for LLM in LLMs:
+                    f.write("### " + row[f"{LLM}"])
+                    comment = row[f"{LLM}"]
+                    f.write(f"{comment}\n")
+            else:
+                f.write(sub)
+            f.write("<div style=\"page-break-before:always\"></div>\n")
