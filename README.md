@@ -25,7 +25,7 @@
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)
-2. gguf形式の量子化モデル(llama-cpp-pythonを使用)
+2. gguf形式の量子化モデル(llama.cppまたはllama-cpp-pythonを使用)
 3. openAI APIで利用できるモデル(GPT-4oなど)
 4. cohere APIで利用できるモデル(Command r+)
 5. google.generativeai APIで利用できるモデル(Gemini-1.5-proなど)
@@ -34,7 +34,7 @@
 
 * HODACHI-EZO-Common-9B-gemma-2
     * https://huggingface.co/mmnga/HODACHI-EZO-Common-9B-gemma-2-it-gguf
-    * 
+
 * gemma-2-27b
     * https://huggingface.co/legraphista/gemma-2-27b-it-IMat-GGUF
 
