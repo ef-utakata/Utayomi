@@ -92,8 +92,49 @@ python pipeline.py --list
 * Author_comment: 作者コメント
 * LLM identifier: LLMによるコメント
 
+## 全評モード
+入力された短歌の一覧について、指定したLLMを用いてコメントを生成します。
+短歌に添えられたコメントがある場合はコメントを読み込み、またお題がある場合はお題を踏まえてコメントを生成します。
+```sh
+python pipeline.py \
+    -m first \ # 全評モード(defaultで指定されているので入力の必要はなし)
+    -c ./model_conf.yaml \ # 読み込むモデルの設定ファイル
+    -i Calm3-22B \ # 使用するモデルのidentifier
+    -t お題 \ # 題詠・テーマ詠の場合(指定しなければ自由詠)
+    ./output/demo/ \ # 結果の出力先ディレクトリ
+    ./output/demo/ef_test_free_result.csv # 各LLMからの表を記載したcsvファイル
+```
+
+
 ## 歌会モード
-複数のLLMからのコメントをGeminiに入力し、共通点や相違点についての要約を出力するモードです。  
-引数mに"utakai"を指定、iをGeminiに設定し、入力ファイルを各LLMからのコメントが記述されたCSVを指定すると実行されます。
-notebook中に実行例を記載しています。  
+複数のLLMからのコメントをGeminiまたはEZO-Qwen2.5-72Bに入力し、共通点や相違点についての要約を出力するモードです。  
+引数mに"utakai"を指定、iをGeminiまたはEZO-Qwen2.5-72Bに設定し、入力ファイルを各LLMからのコメントが記述されたCSVを指定すると実行されます。
+以下のスクリプトを実行すると、出力先のディレクトリに各LLMからのコメントの要約をmarkdown形式のテキストとpdfファイルで出力します。
+
+```sh
+# 歌会モードで各コメントを要約
+python pipeline.py \
+    -m utakai \  # モード指定
+    -c ./model_conf.yaml \ # 読み込むモデルの設定ファイル
+    -i EZO-Qwen2.5-72B \ # 要約に使用するモデルのidentifier
+    ./output/demo/ \ # 結果の出力先ディレクトリ
+    ./output/demo/ef_test_free_result.csv # 各LLMからの表を記載したcsvファイル
+```
+
+## 選評モード
+入力された短歌一覧を一度にLLMに入力し、指定した数の歌を選んでコメントを出力するスクリプトです。
+2024年11月24日現在、入力コンテキスト長の長いモデル(Gemini, Mistral-Nemo-Japanese)でのみ実行可能です。
+出力先のディレクトリに各LLMからの選評結果をmarkdown形式のテキストとpdfファイルで出力します。
+
+```sh
+# 歌会モードで各コメントを要約
+python selection.py \
+    -c ./model_selection_conf.yaml \ # 読み込むモデルの設定ファイル（選評モード用）
+    -i Mistral-Nemo-Japanese \ # 要約に使用するモデルのidentifier
+    -a 毎月短歌nn：yyyy部門 \  # 選評対象の企画の名称(出力結果に記載するもの)
+    -n 8 \ # 入力された短歌から何種を選ぶかの指定
+    ./output/demo/ \ # 結果の出力先ディレクトリ
+    ./output/demo/ef_test_free_result.csv # 選評対象の短歌一覧
+```
+
 
