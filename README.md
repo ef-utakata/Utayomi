@@ -15,12 +15,9 @@
     * 歌会モードのmarkdown出力に対応  
 * 2024年7月25日: 0.5.0 公開
     * 対応モデルの追加, llama-cliで動作するモデルの実行に対応
-      
-## ToDo
-- [x] 連作入力対応
-- [x] 複数LLMの出力をファシリテーションするモード
-- [ ] 再生成モード（指定番号を再生成）
-- [ ] コンテナ化
+* 2024年11月24日: 0.6.0 公開
+    * LLMによる選評実施のスクリプトを追加、対応モデルやプロンプト設計を変更
+
 
 ## 対応モデル
 以下の形式のモデルに対応しています。
@@ -31,36 +28,6 @@
 5. google.generativeai APIで利用できるモデル(Gemini-1.5-proなど)
 
 2024年7月25日時点で、以下のモデルを用いた入力短歌へのコメントの出力が可能です。
-
-* HODACHI-EZO-Common-9B-gemma-2
-    * https://huggingface.co/mmnga/HODACHI-EZO-Common-9B-gemma-2-it-gguf
-
-* gemma-2-27b
-    * https://huggingface.co/legraphista/gemma-2-27b-it-IMat-GGUF
-
-* Shadows-MoE
-    * https://huggingface.co/Local-Novel-LLM-project/Shadows-MoE-GGUF
-
-* Umievo-itr012-Gleipnir-7B
-    * https://huggingface.co/umiyuki/Umievo-itr012-Gleipnir-7B/tree/main
-
-* Oumuamua-7b-instruct-v2
-    * https://huggingface.co/nitky/Oumuamua-7b-instruct-v2
-
-* Ninja-V2-7B  
-    * https://huggingface.co/Local-Novel-LLM-project/Ninja-V2-7B
-
-* Llama-3-elyza-jp-8b
-    * https://huggingface.co/elyza/Llama-3-ELYZA-JP-8B-GGUF
-
-* Command-r-plus（API key必要）  
-    * https://huggingface.co/CohereForAI/c4ai-command-r-plus
-
-* Gemini(API key必要、1.5-pro, 1.5-flash, 1.0-pro, gemini-pro の4つを自動で切り替え)  
-    * https://gemini.google.com/?hl=ja
-
-* GPT-4o（API key必要）  
-    * https://platform.openai.com/docs/overview
 
 
 APIでアクセスするモデルを利用する場合は、それぞれのモデルの配布元からAPI keyを取得し、以下の環境変数に入力する必要があります。
