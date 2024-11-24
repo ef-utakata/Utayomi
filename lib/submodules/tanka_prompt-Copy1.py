@@ -1,6 +1,3 @@
-import colorama
-from colorama import Fore, Back, Style
-
 # お題の有無、作者コメントの有無、指摘コメントの有無に応じて動的にプロンプトを生成、入力モデルに対応したプロンプトを生成するモジュール
 def tanka_prompt(configs,
                  Theme,
@@ -21,12 +18,6 @@ def tanka_prompt(configs,
         Human_comment = "NaN"
     if (Author_comment == "nan"):
         Author_comment = "NaN"
-    if (Author == "nan"):
-        print(Fore.YELLOW + "[MESSAGE]:作者名の記載がありません。「匿名」さんとして処理します...\n" + Fore.RESET)
-        Author = "匿名"
-    if (Author == "NaN"):
-        print(Fore.YELLOW + "[MESSAGE]:作者名の記載がありません。「匿名」さんとして処理します...\n" + Fore.RESET)
-        Author = "匿名"
     # for debug
     #print ("\ncritic_stance: " + str(critic_stance))
     #print ("Theme: " +  str(Theme))
@@ -43,13 +34,13 @@ def tanka_prompt(configs,
 
     # user prompt を生成(動的には作らず、8条件全部を網羅する形で記述)
     if Theme == 0 and Author_comment == "NaN" and Human_comment == "NaN":
-        user = """以下は、短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は、{author}さんが詠まれた短歌です。
 {tanka}
 
 この短歌の表現や内容についての鑑賞文を出力してください。""".format(author = Author, tanka = Tanka)
         
     elif Theme == 0 and Author_comment != "NaN" and Human_comment == "NaN":
-        user = """以下は、短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は、{author}さんが詠まれた短歌です。
 {tanka}
 
 また、この短歌には作者により以下のようなコメントが添えられています。
@@ -58,7 +49,7 @@ def tanka_prompt(configs,
 作者のコメントを踏まえて、この短歌の表現や内容についての鑑賞文を出力してください。""".format(author = Author, tanka = Tanka, author_comment = Author_comment)
         
     elif Theme == 0 and Author_comment == "NaN" and Human_comment != "NaN":
-        user = """以下は、短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は、{author}さんが詠まれた短歌です。
 {tanka}
 
 加えて、あなたがこの短歌について誤解したり見落としたりしていることとして、以下の点が指摘されています。
@@ -67,7 +58,7 @@ def tanka_prompt(configs,
 この指摘を踏まえて、この短歌の表現や内容についての鑑賞文を出力してください。""".format(author = Author, tanka = Tanka, human = Human_comment)
         
     elif Theme == 0 and Author_comment != "NaN" and Human_comment != "NaN":
-        user = """以下は、短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は、{author}さんが詠まれた短歌です。
 {tanka}
 
 また、この短歌には作者により以下のようなコメントが添えられています。
@@ -79,7 +70,7 @@ def tanka_prompt(configs,
 作者のコメントとこの指摘を踏まえて、この短歌の表現や内容についての鑑賞文を出力してください。""".format(author = Author, tanka = Tanka, author_comment = Author_comment, human = Human_comment)
         
     elif Theme != "NaN" and Author_comment == "NaN" and Human_comment == "NaN":
-        user = """以下は、短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は「{odai}」というお題で詠まれた短歌です。作者は{author}さんです。
 
 {tanka}
 
@@ -96,7 +87,7 @@ def tanka_prompt(configs,
 お題が「{odai}」であることと作者のコメントを踏まえて、この短歌の表現や内容についての鑑賞文を出力してください。""".format(odai = Theme, author = Author, tanka = Tanka, author_comment = Author_comment)
         
     elif Theme != "NaN" and Author_comment == "NaN" and Human_comment != "NaN":
-        user = """以下は、短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は「{odai}」というお題で詠まれた短歌です。作者は{author}さんです。
 
 {tanka}
 
@@ -105,7 +96,7 @@ def tanka_prompt(configs,
 
 お題が「{odai}」であることとこの指摘を踏まえて、この短歌の表現や内容についの鑑賞文を出力してください。""".format(odai = Theme, author = Author, tanka = Tanka, human = Human_comment)
     elif Theme != "NaN" and Author_comment != "NaN" and Human_comment != "NaN":
-        user = """以下は「{odai}」というお題で短歌投稿企画に投稿された短歌で、作者名は{author}さんです。
+        user = """以下は「{odai}」というお題で詠まれた短歌です。作者は{author}さんです。
 
 {tanka}
 

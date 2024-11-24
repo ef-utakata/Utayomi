@@ -3,6 +3,7 @@ output/*.csv
 input/*.csv
 input/demo/.*
 models/*.gguf
+notebook.ipynb
 .ipynb_checkpoints
 lib/.ipynb_checkpoints
 lib/submodules/.ipynb_checkpoints

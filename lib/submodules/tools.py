@@ -3,6 +3,9 @@ import os
 import re
 import colorama
 from colorama import Fore, Back, Style
+import random
+import markdown
+import pdfkit
 
 # 完全新規の場合に、作品一覧のモデル入力を前処理
 def tanka_preprocess(input_csv):
@@ -179,6 +182,11 @@ def regen_decision(output, prohibit_list, regen, chr_num, regen_count, patience_
     # time outの場合再生成カウントを上げる
     if re.search(r'評の生成時間がタイムアウトしました', output):
         regen = regen + [1]
+    # 出力が途中で終わっているかどうかを判定    
+    output = output.rstrip("\n ")
+    if not output.endswith("。"):    # 末尾の改行とスペースを削除
+        print(Fore.RED + "\n[MESSAGE]: 出力の末尾が中断されている可能性があります。"  + Fore.RESET)
+        regen = regen + [1]
 
     # 安全設定で拒否された場合(gemini)の場合はループから抜ける
     if (output == "ERROR"):
@@ -196,26 +204,30 @@ def get_tokens_as_list(word_list, tokenizer):
     return tokens_list
 
 # 歌会モードの結果を作者順でソートし、markdown形式のファイルで出力
-def utakai_markdown(df, out_csv):
+def utakai_markdown(df, out_csv, row_name):
     
     basename_without_ext = os.path.splitext(os.path.basename(out_csv))[0]
-    
+    dirname = os.path.splitext(os.path.dirname(out_csv))[0]
     
     df = df.sort_values('Author')
-
-    with open(out_csv, mode='w') as f:
+    out_path =  dirname + "/" + basename_without_ext + ".utakai.md"
+    print(Fore.YELLOW + "[MESSAGE]: 歌会モードの結果を[" + str(out_path) + "]に出力します..."  + Fore.RESET)
+    with open(out_path, mode='w') as f:
         for index, row in df.iterrows():
             f.write("\n## 投稿歌\n")
             f.write("**" + row['Content'] + "**\n")
             f.write("## 作者\n")
+            if (Author == "nan"):
+                print(Fore.YELLOW + "[MESSAGE]:作者名の記載がありません。「匿名」さんとして処理します...\n" + Fore.RESET)
+                Author = "匿名"
             f.write(str(row['Author']))
             f.write("\n")
-            sub = row['Utakai:Gemini'].replace("\n**", "\n### **")
+            sub = row[row_name].replace("\n**", "\n### **")
             test = sub
             
             # Geminiが拒否した場合はLLMのコメントをそのまま掲載
-            if row['Utakai:Gemini'] == "ERROR":
-                sub = "* Geminiの入力エラーで要約が実行できなかったため、各LLMからのコメントをそのまま掲載します。  \n"
+            if row[row_name] == "ERROR":
+                sub = "* 入力エラーで要約が実行できなかったため、各LLMからのコメントをそのまま掲載します。  \n"
                 f.write(sub)
                 LLMs = [s for s in df.columns.values if s.startswith('LLM:')]
                 for LLM in LLMs:
@@ -224,4 +236,58 @@ def utakai_markdown(df, out_csv):
                     f.write(f"{comment}\n")
             else:
                 f.write(sub)
-            f.write("<div style=\"page-break-before:always\"></div>\n")
+            f.write("\n<div style=\"page-break-before:always\"></div>\n")
+    
+    # Markdownファイルの読み込み
+    with open(out_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+        
+    pdf_out_path =  dirname + "/" + basename_without_ext + ".utakai.pdf"
+    print(Fore.YELLOW + "[MESSAGE]: 歌会モードの結果を[" + str(pdf_out_path) + "]に出力します..."  + Fore.RESET)
+    # MarkdownからHTMLへの変換
+    html = markdown.markdown(text,extensions=['tables'])
+    # HTMLからPDFへの変換
+    pdfkit.from_string(html, pdf_out_path, options={'encoding': 'utf-8'})
+
+# Contentの一覧を通し番号を付けて改行して出力
+def process_content(df: pd.DataFrame) -> str:
+    try:
+        content_list = df["Content"].tolist()
+        # 短歌一覧をランダムに並べ替え
+        random.shuffle(content_list)
+        if not content_list:  #空のリストの場合の処理
+            return ""
+
+        numbered_content = ""
+        for i, content in enumerate(content_list):
+            numbered_content += f"{i+1}. {content}\n"  #enumerateでインデックスと値を取得
+        return numbered_content
+    except KeyError:
+        print("Error: DataFrameに'Content'列が存在しません。")
+        return ""
+    except Exception as e:
+        print(f"Error:予期せぬエラーが発生しました。 {e}")
+        return ""
+
+# 選の結果をmarkdown形式のpdfで出力する
+def selection_markdown(model, result, out_csv):
+    
+    basename_without_ext = os.path.splitext(os.path.basename(out_csv))[0]
+    dirname = os.path.splitext(os.path.dirname(out_csv))[0]
+    
+    out_path =  dirname + "/" + basename_without_ext + ".selection.md"
+    print(Fore.YELLOW + "[MESSAGE]: 選評を[" + str(out_path) + "]に出力します..."  + Fore.RESET)
+    
+    with open(out_path, mode='w') as f:
+        f.write(result)
+    
+    # Markdownファイルの読み込み
+    with open(out_path, 'r', encoding='utf-8') as f:
+        text = f.read()
+        
+    pdf_out_path =  dirname + "/" + basename_without_ext + ".selection.pdf"
+    print(Fore.YELLOW + "[MESSAGE]:選評を[" + str(pdf_out_path) + "]に出力します..."  + Fore.RESET)
+    # MarkdownからHTMLへの変換
+    html = markdown.markdown(text,extensions=['tables'])
+    # HTMLからPDFへの変換
+    pdfkit.from_string(html, pdf_out_path, options={'encoding': 'utf-8'})

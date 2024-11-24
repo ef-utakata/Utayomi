@@ -16,12 +16,13 @@ def gguf_load(config):
         
         subprocess.call(command, shell=True)
         
-    print(Fore.GREEN +"[MESSAGE] model: " + config["model_url"] +  " をロードしています......"  + Fore.RESET)
+    print(Fore.GREEN +"[MESSAGE] model: " + config["model_path"] +  " をロードしています......"  + Fore.RESET)
     llm = Llama(model_path = config["model_path"],
-                n_ctx = 1024,
+                #n_ctx = 4000,
+                n_ctx = 10000,
                 #seed = seed_num,
                 embedding = False,
-                verbose = True, # decugのためTrue
+                verbose = False, # debug時はTrue
                 n_gpu_layers = -1,
                 n_batch = 2048,
                 flash_attn = True,
@@ -40,11 +41,15 @@ def trf_load(config):
 
     tokenizer = AutoTokenizer.from_pretrained(model_path,
                                               torch_dtype="auto",
-                                              device_map="auto",)
+                                              device_map="cuda",
+                                              #device_map="cuda:0",
+                                              )
+    # pad_token_id を設定
+    tokenizer.pad_token_id = tokenizer.eos_token_id
     
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  torch_dtype="auto",
-                                                 device_map="auto",
+                                                 device_map="cuda:0",
                                                  low_cpu_mem_usage=True, #GLMで追加
                                                  trust_remote_code=True, #GLMで追加
                                                  attn_implementation="eager", #Phi-3-miniで追加

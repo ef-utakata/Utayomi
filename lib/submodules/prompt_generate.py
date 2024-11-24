@@ -6,52 +6,8 @@ import torch
 import time
 from lib.submodules.tools import *
 
-# llamacpp
-def llamacli_generate(prompt, model, configs, seed_num):
-
-    #改行を除去
-    user = prompt["user"] + prompt["assist"] 
-    user = user.replace("\n", "")
-
-    temp = configs["temperature"]
-    repeat_penalty = configs["repeat_penalty"]
-    seed = seed_num
-    logdir = "./output"
-
-    # llama.cppの実行バイナリ
-    llamacli = "./llama.cpp/llama-cli"
-    
-    # コマンドは一つの文字列として指定
-    cmd = f"""{llamacli} -m {model} \
---temp {temp} \
--p {user} \
--s {seed} \
---repeat-penalty {repeat_penalty} \
---no-escape \
---log-disable \
---color \
--ld {logdir}"""
-    
-    # コマンドを実行、yaml出力
-    result = subprocess.run(cmd, shell=True)
-
-    # 出力されたyamlを読み込み
-    targetPattern = r"./output/*.yml"
-    out = glob.glob(targetPattern)
-    
-    # yamlから出力を抽出
-    with open(out[0]) as file:
-        yml = yaml.load(file, Loader=yaml.FullLoader)
-        output = yml["output"]
-
-    # logファイルを消去
-    remove = f"rm {out[0]}"
-    subprocess.run(remove, shell=True)
-    
-    return(output)
-
 # gemini
-def gemini_generate(prompt, model, configs):
+def gemini_generate(sys, prompt, model):
     seed = 0
     import google.generativeai as genai
     from google.generativeai.types import HarmCategory, HarmBlockThreshold
@@ -60,13 +16,8 @@ def gemini_generate(prompt, model, configs):
     roop_flag = 0
     output = 0
     model_list = model
-    text = """{}
+    text = prompt
 
-{}
-{}""".format(prompt["sys"],
-             prompt["user"],
-             prompt["assist"])
-    
     while roop_flag == 0:
         if not gen_count in model_list:
             print(Fore.RED +"[MESSAGE]: プロンプトはgeminiのどのモデルにも拒否されました。" + Fore.RESET)
@@ -75,9 +26,12 @@ def gemini_generate(prompt, model, configs):
         else:
             genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
             model_name = model_list[gen_count]
-            model = genai.GenerativeModel(model_name)
+            model = genai.GenerativeModel(model_name,
+                                          system_instruction=sys)
             print(Fore.YELLOW +"[MESSAGE]: プロンプトを [" + model_name + "] に入力しています..." + Fore.RESET)
-            response = model.generate_content(text, 
+            print(Fore.YELLOW +f"<<sys>>:\n{sys}\n<<prompt>>{prompt}" + Fore.RESET)
+            
+            response = model.generate_content(text,
                                               safety_settings={HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
                                                                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
                                                                #HarmCategory.HARM_CATEGORY_DEROGATORY: HarmBlockThreshold.BLOCK_ONLY_HIGH,
@@ -192,12 +146,13 @@ def oumuamua_generate(prompt, tokenizer, model, configs, seed):
                ]
 
     encodeds = tokenizer.apply_chat_template(messages, 
-                                             return_tensors="pt")
+                                             return_tensors="pt",
+                                             return_attention_mask=True)
     streamer = TextStreamer(tokenizer, 
                             skip_prompt=True, 
                             skip_special_tokens=True)
 
-    model_inputs = encodeds.to("cuda")
+    model_inputs = encodeds.to("cuda:0")
     torch.manual_seed(seed)
     
     generated_ids = model.generate(model_inputs, 
@@ -211,8 +166,10 @@ def oumuamua_generate(prompt, tokenizer, model, configs, seed):
     output = tokenizer.decode(generated_ids[0][encodeds.shape[1]:], skip_special_tokens=True).strip()
     return(output)
     
-#phi-3-mini
-def phi_mini_generate(prompt, tokenizer, model, configs, seed):
+#Llm-jp-3-13B
+def llm_jp_generate(prompt, tokenizer, model, configs, seed):
+    import transformers
+    from transformers import TextStreamer
     
     torch.manual_seed(seed)
     
@@ -221,13 +178,54 @@ def phi_mini_generate(prompt, tokenizer, model, configs, seed):
                 {"role": "assist", "content":  prompt["assist"]}
                ]
 
-    encodeds = tokenizer.apply_chat_template(messages, return_tensors="pt")
+    encodeds = tokenizer.apply_chat_template(messages, return_tensors="pt",
+                                             padding=True,
+                                             add_generation_prompt=True,
+                                             return_attention_mask=True)
+
     streamer = TextStreamer(tokenizer, 
                             skip_prompt=True, 
                             skip_special_tokens=True)
-
-    model_inputs = encodeds.to("cuda")
+    #attention_mask=encodeds['attention_mask']
+    
+    model_inputs = encodeds.to("cuda:0")
+    #attention_mask=attention_mask.to("cuda:0")
+    
     generated_ids = model.generate(model_inputs, 
+                                   #attention_mask=attention_mask,
+                                   max_new_tokens=configs["Max_Tokens"], 
+                                   do_sample=True, 
+                                   temperature=configs["temperature"],
+                                   streamer=streamer,)
+    output = tokenizer.decode(generated_ids[0][encodeds.shape[1]:], skip_special_tokens=True).strip()
+    return(output)
+# Llama-3.1-Swallow-8B
+def Llama_Swallow_generate(prompt, tokenizer, model, configs, seed):
+    import transformers
+    from transformers import TextStreamer
+    
+    torch.manual_seed(seed)
+    
+    messages = [{"role": "system", "content": "以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。"},
+                {"role": "user", "content": prompt["user"]},
+                {"role": "assist", "content":  prompt["assist"]}
+               ]
+
+    encodeds = tokenizer.apply_chat_template(messages, return_tensors="pt",
+                                             padding=True,
+                                             add_generation_prompt=True,
+                                             return_attention_mask=True)
+
+    streamer = TextStreamer(tokenizer, 
+                            skip_prompt=True, 
+                            skip_special_tokens=True)
+    #attention_mask=encodeds['attention_mask']
+    
+    model_inputs = encodeds.to("cuda:0")
+    #attention_mask=attention_mask.to("cuda:0")
+    
+    generated_ids = model.generate(model_inputs, 
+                                   #attention_mask=attention_mask,
                                    max_new_tokens=configs["Max_Tokens"], 
                                    do_sample=True, 
                                    temperature=configs["temperature"],
@@ -235,46 +233,13 @@ def phi_mini_generate(prompt, tokenizer, model, configs, seed):
     output = tokenizer.decode(generated_ids[0][encodeds.shape[1]:], skip_special_tokens=True).strip()
     return(output)
 
-#Ninja-V1-RP
-def ninja_generate(prompt, tokenizer, model, configs, seed):
-    import transformers
-    import re
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
-
-    # Vicuna 1.1
-    messages = """{Sys}
-USER: {User}
-
-ASSISTANT: {Assist}""".format(Sys = prompt["sys"],
-                              User = prompt["user"],
-                              Assist = prompt["assist"])
-    encodeds = tokenizer(messages, return_tensors="pt")
     
-    streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
-    torch.manual_seed(seed)
-    
-    model_inputs = encodeds.to("cuda")
-    generated_ids = model.generate(**model_inputs, 
-                                   max_new_tokens=configs["Max_Tokens"],
-                                   top_p=configs["Top_P"],
-                                   temperature=configs["temperature"],
-                                   bad_words_ids=get_tokens_as_list(configs["prohibit_list"], tokenizer),
-                                   do_sample=True,
-                                   pad_token_id=tokenizer.eos_token_id,
-                                   repetition_penalty=configs["repetition_penalty"],
-                                   streamer=streamer,)
-
-    # prompt部分を除去
-    output = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-    result = re.sub(r'(.*\n)+.*\n+.*文章を出力します。', '', output, re.DOTALL|re.MULTILINE)
-    return(result)
-
 # llama-cpp-python test
-def llama_cpp_generate(prompt, model, configs, seed_num):
+def llama_cpp_generate(prompt: dict, model, configs: dict, seed_num: int):
     import llama_cpp
     
     message_list = []
+
     # gemma由来モデルはsystemロールがないので除去
     if "gemma" in configs["model_path"]:
         message_list = [{"role": "user", "content": prompt["user"]},

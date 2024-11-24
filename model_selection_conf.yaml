@@ -1,0 +1,30 @@
+# 登録モデルごとのconfig
+Mistral-Nemo-Japanese:
+    model_path: "cyberagent/Mistral-Nemo-Japanese-Instruct-2408"
+    model_type: "trf"
+    temperature: 0.01
+    Max_Tokens: 4096
+    min_new_tokens: 400
+    Top_P: 0.95
+    
+Mistral-Nemo-Japanese-gguf:
+    model_path: "./models/Mistral-Nemo-Japanese-Instruct-2408.Q6_K.gguf"
+    model_type: "gguf"
+    model_url: "https://huggingface.co/QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/resolve/main/Mistral-Nemo-Japanese-Instruct-2408.Q6_K.gguf"
+    min_new_tokens: 400
+    Top_P: 0.95
+    temperature: 0.001
+    top_P: 0.95
+    max_Tokens: 4096
+    context_Length: 2048
+    embedding: False
+    presence_Penalty:  1.5
+    repeat_penalty: 0.8
+
+Gemini:
+    #model_path: "gemini-1.5-pro-latest"
+    model_path: "gemini-exp-1121"
+    model_type: "gemini"
+    temperature: 0
+
+

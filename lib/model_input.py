@@ -52,18 +52,19 @@ def model_input(model_ident,
         # Umievo-itr012-Gleipnir-7B
         if (model_ident == "Umievo"):
             output = umievo_generate(prompt, tokenizer, model, configs, seed_num)
-        # Oumuamua
-        elif (model_ident == "Oumuamua"):
-            output = oumuamua_generate(prompt, tokenizer, model, configs, seed_num)
-        # Phi-3-mini
-        elif(model_ident == "Phi-3-mini"):
-            output = phi_mini_generate(prompt, tokenizer, model, configs, seed_num)
-        # Ninja-V2-7B
-        elif(model_ident == "Ninja-v2-7b"):
-            output = ninja_generate(prompt, tokenizer, model, configs, seed)
-        # Shadows-MoE
-        elif(model_ident == "Shadows-moe"):
-            output = ninja_generate(prompt, tokenizer, model, configs, seed)
+        # Llm-jp-3-13B
+        elif (model_ident == "Llm-jp-3-13B"):
+            output = llm_jp_generate(prompt, tokenizer, model, configs, seed_num)
+        # Llm-jp-3-3.7b-instruct-EZO-Humanities
+        elif (model_ident == "Llm-jp-3-3.7b-instruct-EZO-Humanities"):
+            output = Llama_Swallow_generate(prompt, tokenizer, model, configs, seed_num)
+        # Mistral-Nemo-Japanese
+        elif (model_ident == "Mistral-Nemo-Japanese"):
+            output = llm_jp_generate(prompt, tokenizer, model, configs, seed_num)
+        # Llama-3.1-Swallow-8B
+        elif (model_ident == "Llama-3.1-Swallow-8B"):
+            output = Llama_Swallow_generate(prompt, tokenizer, model, configs, seed_num)
+
     
     # エラーメッセージの表示
     if (output == 0):

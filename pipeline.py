@@ -15,7 +15,7 @@ from lib.submodules.tools import *
 from lib.submodules.model_load import *
 from lib.tanka_critic import *
 
-ver = """Utayomi Version: 0.2.0
+ver = """Utayomi Version: 0.4.0
 設計: ef_utakata
 """
 
@@ -25,10 +25,11 @@ parser = argparse.ArgumentParser(description="""Utayomi: 入力された短歌�
 parser.add_argument('input', help='入力短歌一覧のパス(csv形式で入力), 再生成モードの場合は前回の出力一覧')
 parser.add_argument('output', help='出力先ディレクトリのパス(csv形式で出力)')
 parser.add_argument('-c','--config', default='./model_conf.yaml', help='利用モデルの入力設定ファイル(yaml形式)')
+parser.add_argument('-r','--regen',  help='再生成対象のNoリスト(regenモードで使用、yaml形式)')
 parser.add_argument('-i','--identifier', help='入力設定ファイル内の設定識別子(--listで一覧を確認可能)')
 
 # 実行モードの指定
-parser.add_argument('-m','--mode', help='実行モード{first(単作) / rensak(連作) /utakai(要約)} default: first', default='first') #regen
+parser.add_argument('-m','--mode', help='実行モード{first(単作) / rensak(連作) /utakai(要約) /selection(選)} default: first', default='first') #regen
 # お題の指定
 parser.add_argument('-t', '--theme',  help='お題(入力がない場合自由詠)', default=0)
 
@@ -82,6 +83,14 @@ with open(args.config, 'r') as yml:
     for elem in yml[ident]:
         print(Fore.YELLOW +"\t" +elem + ":" + str(yml[ident][elem]) + Fore.RESET)
 
+# 登録モードの確認
+mode_input = ["first","utakai","rensak","selection"]
+mode_list = ", ".join(mode_input)
+if not args.mode in mode_input:
+    print(Fore.RED + f"[ERROR]: [{args.mode}] は入力可能なモードではありません。-m 引数は[{mode_list}のいずれかを入力してください。]\n"  + Fore.RESET)
+    exit()
+else:
+    print(Fore.YELLOW + f"[MESSAGE]: モード[{args.mode}]で処理を実行します... \tmodel: " + ident + Fore.RESET)
 
 # 入力ファイルと出力先のパスを指定（途中生成がある場合はその部分から再開）
 df, df_temp_path, df_merged = output_preprocess(args.input, 
@@ -108,8 +117,10 @@ count_len = 0
 # for debug
 #print(df)
 
+
 # 各行を読み込んでプロンプト生成、モデルに入力、出力を確認して再生成
 for index, row in df.iterrows():
+    
     # 経過ログ出力のためのカウンターを回す
     count_len += 1
     
@@ -136,7 +147,7 @@ for index, row in df.iterrows():
         seed = 0
         output = 0
         df_result = pd.DataFrame()
-
+            
         # 初回生成モード
         if (args.mode == "first"):
             # 短歌評を出力、推論に使用したシード値と中身を取得
@@ -193,13 +204,22 @@ for index, row in df.iterrows():
             result2 = str(end-start_A)[0:7]
             print(Fore.GREEN + "\n[MESSAGE]: 生成時間:" + result1  + Fore.RESET)
             print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
+
+            output = output.rstrip("\n ")
+            if not output.endswith("。"):
+                print(Fore.RED + "\n[MESSAGE]: 出力の末尾が中断されている可能性があります。"  + Fore.RESET)
+                regen = regen + [1]
+
+            if (len(regen) > 0):
+                regen_count += 1
+                print(Fore.YELLOW + "[MESSAGE]: 再生成します...[" + str(regen_count) + " 回目]\n"  + Fore.RESET)
             
             df_result = pd.DataFrame({f'{ident}': output},
                                      index=[row['No']])
             
-        # 各LLMの出力をGeminiに要約させるモード
+        # 各LLMの出力をLLMに要約させるモード
         elif(args.mode == "utakai"):
-            output = utakai(theme, model, row)
+            output = utakai(theme, model, yml[ident], row)
             
             # 処理時間の出力
             end = datetime.datetime.now()
@@ -207,10 +227,18 @@ for index, row in df.iterrows():
             result2 = str(end-start_A)[0:7]
             print(Fore.GREEN + "\n[MESSAGE]: 生成時間:" + result1  + Fore.RESET)
             print(Fore.GREEN + "[MESSAGE]: 合計経過時間" + result2 + " (" + str(count_len) + "/" + str(total_len) + ")" + Fore.RESET)
-            
+
+            output = output.rstrip("\n ")
+            if not output.endswith("。"):
+                print(Fore.RED + "\n[MESSAGE]: 出力の末尾が中断されている可能性があります。"  + Fore.RESET)
+                regen = regen + [1]
+                
+            if (len(regen) > 0):
+                regen_count += 1
+                print(Fore.YELLOW + "[MESSAGE]: 再生成します...[" + str(regen_count) + " 回目]\n"  + Fore.RESET)
             df_result = pd.DataFrame({f'Utakai:{ident}': output},
                                      index=[row['No']])
-    
+
     # 出力先がある場合、そこに1行のみ追加書き込みする（ヘッダーはなしで）
     if (os.path.exists(df_temp_path)):
         df_result.to_csv(df_temp_path, mode='a', header=False)
@@ -245,16 +273,17 @@ df_temp = pd.read_csv(df_temp_path)
 if len(df_integ) == len(df_temp):
     print(Fore.YELLOW + "[MESSAGE]: 出力ファイル[" + str(df_merged) + "]を更新します..."  + Fore.RESET)
     print(Fore.YELLOW + "[MESSAGE]: 一時ファイル...[" + df_temp_path + "]を削除します..."  + Fore.RESET)
-    subprocess.run(f'rm {df_merged}', shell=True)
-    subprocess.run(f'rm {df_temp_path}', shell=True)
 
+    subprocess.run(f'rm {df_temp_path}', shell=True)
+    subprocess.run(f'rm {df_merged}', shell=True)
+    
     # 余分な列を削除して出力を結合
     df_temp = df_temp.drop(df_temp.columns[[0]], axis=1)
     #print(df_integ)
     #print(df_temp)
     
     df_out = pd.concat([df_integ, df_temp], axis=1)
-    
+        
     # read_csv時にindexが付加されている場合は削除
     if ("Unnamed: 0" in df_out):
         del df_out["Unnamed: 0"]
@@ -263,13 +292,16 @@ if len(df_integ) == len(df_temp):
     LLMs = [s for s in df_out.columns.values if s.startswith('LLM:')]
     LLMs = sorted(LLMs)
     # 歌会モードの場合、markdown形式のファイルを出力
-    if ('Utakai:Gemini' in df_out.columns):
+    
+    if (f'Utakai:{ident}' in df_out.columns):
         list_col = ['No','Content','Author_comment','Author'] + LLMs
-        utakai_markdown(df_out, out_csv)
+        utakai_markdown(df_out, df_merged, f"Utakai:{ident}")
     else:
         list_col = ['No','Content','Author_comment','Author'] + LLMs
         
     df_out = df_out[list_col]
+    print(df_merged)
+    print(df_out)
     
     # 出力
     df_out.to_csv(df_merged, mode='x')
