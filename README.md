@@ -17,7 +17,14 @@
     * 対応モデルの追加, llama-cliで動作するモデルの実行に対応
 * 2024年11月24日: 0.6.0 公開
     * LLMによる選評実施のスクリプトを追加、対応モデルやプロンプト設計を変更
-
+* 2024年11月25日: 0.7.0 公開
+    * 選評モードのCLIオプションを共通化（get_common_parser適用、--list/-V追加、-n/-a/-tオプション整理）
+    * 選評出力に短歌の作者名を付与する機能を追加
+    * READMEの選評モード使用例を更新
+* 2025年5月20日: 0.8.0 公開
+    * 前処理用Excel to CSV変換スクリプト(excel_to_csv.py)を追加
+    * シートごとにCSVファイルを生成し、短歌内容・作者・作者コメント列の自動検出を実装
+    * --encodingオプションでCSVの文字エンコーディングを指定可能
 
 ## 対応モデル
 以下の形式のモデルに対応しています。
@@ -56,6 +63,22 @@ python pipeline.py --list
 ## 設定ファイルmodel_conf.yamlの記述方法
 設定ファイル(model_conf.yaml)は利用可能なモデルを追加したり細かい設定を変更する場合などに開発者が編集しやすいようにするためのもので、
 システムの利用のみの場合は特に編集する必要はありません。
+
+## 前処理スクリプト: Excel to CSV
+
+複数シートのExcelファイルを短歌選評システム用のCSVファイルに変換します。各シートごとにNo,Content,Author,Author_comment列を抽出し、シート名をファイル名としたCSVファイルを出力します。
+
+```bash
+python excel_to_csv.py input.xlsx output_directory [--encoding utf-8]
+```
+
+- `--encoding`: 出力CSVファイルの文字エンコーディング（デフォルト: utf-8）
+
+生成されるCSVファイルには以下の列が含まれ、selection.pyやpipeline.pyの入力として利用できます。
+* No: 通し番号(1から順番)
+* Content: 短歌
+* Author: 作者名
+* Author_comment: 作者コメント
 
 ## 入力ファイルの記述方法
 入力フォーマット:csv(UTF-8)ファイル(以下のフォーマットに従って記述されているもの)
@@ -126,15 +149,28 @@ python pipeline.py \
 2024年11月24日現在、入力コンテキスト長の長いモデル(Gemini, Mistral-Nemo-Japanese)でのみ実行可能です。
 出力先のディレクトリに各LLMからの選評結果をmarkdown形式のテキストとpdfファイルで出力します。
 
+以下のコマンドで、-i に入力可能な設定識別子一覧を表示できます。
+
+```bash
+python selection.py --list
+```
+
+バージョン情報を表示するには、以下を実行します。
+
+```bash
+python selection.py -V
+```
+
 ```sh
-# 歌会モードで各コメントを要約
+# 選評モードで短歌を選ぶ例
 python selection.py \
-    -c ./model_selection_conf.yaml \ # 読み込むモデルの設定ファイル（選評モード用）
-    -i Mistral-Nemo-Japanese \ # 要約に使用するモデルのidentifier
-    -a 毎月短歌nn：yyyy部門 \  # 選評対象の企画の名称(出力結果に記載するもの)
-    -n 8 \ # 入力された短歌から何種を選ぶかの指定
+    -c ./model_selection_conf.yaml \ # 選評モード用のモデル設定ファイル
+    -i Mistral-Nemo-Japanese \ # 選評に使用するモデルのidentifier
+    -t お題名 \ # お題指定(省略時は自由詠)
+    -a 毎月短歌nn：yyyy部門 \ # 選評対象の企画の名称(出力結果に記載するもの)
+    -n 8 \ # 選ぶ短歌の数
     ./output/demo/ \ # 結果の出力先ディレクトリ
-    ./output/demo/ef_test_free_result.csv # 選評対象の短歌一覧
+    ./output/demo/ef_test_free_result.csv # 選評対象の短歌一覧CSVファイル
 ```
 
 
