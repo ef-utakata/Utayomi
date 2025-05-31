@@ -63,12 +63,13 @@
 7. [x] 原稿を `*.radio_script.txt`、音声を `*.selection.[ext]` として保存。
 
 ### D. ドキュメント更新
-8. [ ] README.md → 選評モードの例を Markdown＋TTS へ更新。
+8. [x] README.md → 選評モードの例を Markdown＋TTS へ更新。
 9. [ ] `install.md` → 依存ライブラリ／環境変数 (GOOGLE_API_KEY) を明記。
 
 ### E. テスト & CI
 10. [ ] 手動テスト: demo CSV で `--tts` オン・オフ実行。
 11. [ ] Pre-commit & 既存テストが通ること確認。
+12. [x] Gemini 呼び出し後の待機時間 (`wait_sec`, default 20s) を YAML で調整可能に
 
 ---
 

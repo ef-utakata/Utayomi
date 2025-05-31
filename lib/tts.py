@@ -95,6 +95,7 @@ def generate_speech(
     output_basename: str,
     model_name: str = "gemini-2.5-pro-preview-tts",
     speaker_voice_configs: List[types.SpeakerVoiceConfig] | None = None,
+    wait_sec: int = 20,
 ) -> str:
     """Generate speech from *script_text* and save to a file.
 
@@ -160,6 +161,13 @@ def generate_speech(
 
     out_path = f"{output_basename}{ext}"
     save_binary_file(out_path, audio_data)
+
+    # optional wait to mitigate rate limits
+    if wait_sec > 0:
+        import time
+        print(f"[MESSAGE]: waiting {wait_sec} sec after TTS …")
+        time.sleep(wait_sec)
+
     return out_path
 
 
@@ -181,6 +189,7 @@ def generate_radio_script(
     template_path: str,
     model_name: str = "gemini-2.5-pro-preview",
     temperature: float = 0.7,
+    wait_sec: int = 20,
 ) -> str:
     """Generate a radio-show style script from *selection_markdown*.
 
@@ -213,4 +222,11 @@ def generate_radio_script(
     if not response.parts:
         raise RuntimeError("Gemini script generation returned empty response.")
 
-    return response.text
+    script_text = response.text
+
+    if wait_sec > 0:
+        import time
+        print(f"[MESSAGE]: waiting {wait_sec} sec after script generation …")
+        time.sleep(wait_sec)
+
+    return script_text

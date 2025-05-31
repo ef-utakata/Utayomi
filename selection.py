@@ -121,6 +121,7 @@ if args.tts:
             template_path = script_conf.get('prompt_template', './generate_script_prompt.md')
             script_model = script_conf.get('model_name', 'gemini-2.5-pro-preview')
             script_temp = script_conf.get('temperature', 0.7)
+            script_wait = script_conf.get('wait_sec', 20)
 
             # create radio script using Gemini
             radio_script = generate_radio_script(
@@ -128,6 +129,7 @@ if args.tts:
                 template_path=template_path,
                 model_name=script_model,
                 temperature=script_temp,
+                wait_sec=script_wait,
             )
 
             # save generated script for reference
@@ -138,6 +140,8 @@ if args.tts:
             print(Fore.YELLOW + f"[MESSAGE]: ラジオ原稿を生成しました → {script_path}" + Fore.RESET)
 
             # --- TTS ------------------------------------------------------
+            speech_conf = tts_conf.get('speech_generation', {})
+            speech_wait = speech_conf.get('wait_sec', 20)
             output_base = dirname + "/" + basename_without_ext + ".selection"
 
             print(Fore.YELLOW + "[MESSAGE]: TTS を実行しています…" + Fore.RESET)
@@ -145,6 +149,7 @@ if args.tts:
                 script_text=radio_script,
                 output_basename=output_base,
                 model_name=args.voice_model,
+                wait_sec=speech_wait,
             )
             print(Fore.GREEN + f"[MESSAGE]: 音声ファイルを生成しました → {audio_file}" + Fore.RESET)
     except Exception as e:
