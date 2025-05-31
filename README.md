@@ -26,6 +26,11 @@
     * シートごとにCSVファイルを生成し、短歌内容・作者・作者コメント列の自動検出を実装
     * --encodingオプションでCSVの文字エンコーディングを指定可能
 
+* 2025年5月31日: 0.9.0 公開
+    * 選評モードにラジオ番組風原稿生成＋Gemini TTS 音声出力フロー(--tts)を追加
+    * 選評モードのPDF出力を廃止し Markdown のみへ変更
+    * generate_script_prompt.md, tts_generation_config.yaml を追加
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)

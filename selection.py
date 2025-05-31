@@ -19,7 +19,7 @@ from lib.submodules.model_load import *
 from lib.tanka_critic import *
 from lib.cli import get_common_parser, handle_version, handle_list, load_config
 
-ver = """Utayomi-selection Version: 0.1.0
+ver = """Utayomi-selection Version: 0.2.0
 設計: ef_utakata
 """
 
