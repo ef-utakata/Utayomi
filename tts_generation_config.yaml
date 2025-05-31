@@ -1,5 +1,5 @@
 script_generation:
-  model_name: "gemini-2.5-pro-preview"
+  model_name: "gemini-2.5-flash-preview-05-20"
   temperature: 0.7
   prompt_template: "./generate_script_prompt.md"
   wait_sec: 20           # Gemini API 呼び出し後に待機する秒数(原稿生成)
