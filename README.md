@@ -37,6 +37,14 @@
       `-t <お題>` 指定時に原稿へお題説明を自動挿入
     * 各種ドキュメント更新
 
+* 2025年6月1日: 1.1.0 公開
+    * TTS のデフォルトモデルを `gemini-2.5-pro-preview-tts` に変更
+    * マルチスピーカー TTS に対応 (デフォルト: Speaker 1=Charon / Speaker 2=Gacrux)
+      - `tts_generation_config.yaml` に `speech_generation.voices` を追加し
+        YAML で簡単に話者・音色を差し替え可能
+    * 旧 `google-generativeai` SDK を廃止し **`google-genai >=0.8.5`** へ移行
+    * 単体テスト `tests/test_tts.py` を追加（API キーがある環境で音声生成を検証）
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)

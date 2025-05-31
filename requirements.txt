@@ -9,5 +9,6 @@ pyyaml
 colorama
 cohere
 openai
-google.generativeai
+google-genai>=0.8.5
 anthropic
+pytest

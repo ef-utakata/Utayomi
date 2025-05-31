@@ -170,6 +170,32 @@ if args.tts:
             # --- TTS ------------------------------------------------------
             speech_conf = tts_conf.get('speech_generation', {})
             speech_wait = speech_conf.get('wait_sec', 20)
+
+            # ------------------------------------------------------------------
+            # Build speaker / voice list (configurable)
+            # ------------------------------------------------------------------
+            voices_conf = speech_conf.get(
+                'voices',
+                [
+                    {"speaker": "Speaker 1", "voice_name": "Charon"},
+                    {"speaker": "Speaker 2", "voice_name": "Gacrux"},
+                ],
+            )
+
+            from google.genai import types as gtypes
+
+            speaker_voice_configs = [
+                gtypes.SpeakerVoiceConfig(
+                    speaker=v.get("speaker", f"speaker_{idx}"),
+                    voice_config=gtypes.VoiceConfig(
+                        prebuilt_voice_config=gtypes.PrebuiltVoiceConfig(
+                            voice_name=v.get("voice_name", "Charon")
+                        )
+                    ),
+                )
+                for idx, v in enumerate(voices_conf)
+            ]
+
             output_base = os.path.join(output_dir, common_basename)
 
             print(Fore.YELLOW + "[MESSAGE]: TTS を実行しています…" + Fore.RESET)
@@ -177,6 +203,7 @@ if args.tts:
                 script_text=radio_script,
                 output_basename=output_base,
                 model_name=args.voice_model,
+                speaker_voice_configs=speaker_voice_configs,
                 wait_sec=speech_wait,
             )
             print(Fore.GREEN + f"[MESSAGE]: 音声ファイルを生成しました → {audio_file}" + Fore.RESET)

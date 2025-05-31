@@ -14,7 +14,8 @@ import os
 import struct
 from typing import List
 
-from google import genai
+# Google GenAI (>=0.8.5)
+import google.genai as genai
 from google.genai import types
 
 # ---------------------------------------------------------------------------
@@ -102,27 +103,39 @@ def generate_speech(
     Returns the generated file path. Requires env var `GOOGLE_API_KEY`.
     """
 
-    if speaker_voice_configs is None:
+    # ------------------------------------------------------------------
+    # Build default multi-speaker config if none supplied.
+    # Gemini TTS 原稿は 2 名対話を想定 (Speaker 1 / Speaker 2)。
+
+    if not speaker_voice_configs:
         speaker_voice_configs = [
-            types.SpeakerVoiceConfig(speaker="speaker_a", voice="VOICE_FEMALE_1")
+            types.SpeakerVoiceConfig(
+                speaker="Speaker 1",
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Charon")
+                ),
+            ),
+            types.SpeakerVoiceConfig(
+                speaker="Speaker 2",
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Gacrux")
+                ),
+            ),
         ]
 
-    client = genai.Client()
-
-    contents = [
-        types.Content(
-            role="user",
-            parts=[types.Part.from_text(text=script_text)],
+    speech_cfg = types.SpeechConfig(
+        multi_speaker_voice_config=types.MultiSpeakerVoiceConfig(
+            speaker_voice_configs=speaker_voice_configs
         )
-    ]
+    )
+
+    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+
+    contents = script_text
 
     config = types.GenerateContentConfig(
         response_modalities=["audio"],
-        speech_config=types.SpeechConfig(
-            multi_speaker_voice_config=types.MultiSpeakerVoiceConfig(
-                speaker_voice_configs=speaker_voice_configs
-            )
-        ),
+        speech_config=speech_cfg,
     )
 
     print(f"[MESSAGE]: Gemini TTS で音声合成を開始 ({model_name}) …")
@@ -225,15 +238,15 @@ def generate_radio_script(
         prompt_text = prompt_text.replace("{お題セクション}", theme_sentence)
     # 旧テンプレート互換: placeholder がない場合は何もしない
 
-    import google.generativeai as genai
+    import google.genai as genai
 
-    client = genai.Client()
-    model = client.models.get(model_name)
+    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
     print(f"[MESSAGE]: Gemini にラジオ原稿生成を依頼しています … ({model_name})")
 
-    response = model.generate_content(
-        prompt_text,
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt_text,
         generation_config=genai.types.GenerationConfig(temperature=temperature),
     )
 

@@ -42,7 +42,9 @@ python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 git clone https://github.com/ef-utakata/Utayomi.git
 cd Utayomi
 # 動作に必要なpythonライブラリのインストール
-pip install -r ./requirements.txt
+# 旧 SDK をアンインストールし、新 SDK をインストール
+pip uninstall -y google-generativeai || true
+pip install -r ./requirements.txt  # requirements.txt には google-genai>=0.8.5 と pytest が記載されています
 
 # llama-cpp-python(GPU対応)をインストール(cuda-12の場合)
 export CUDACXX="/usr/local/cuda-12/bin/nvcc"

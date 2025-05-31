@@ -6,7 +6,6 @@ from colorama import Fore, Back, Style
 import random
 # Markdown ライブラリは Markdown→HTML 変換のために残す
 import markdown
-import pdfkit
 
 # 完全新規の場合に、作品一覧のモデル入力を前処理
 def tanka_preprocess(input_csv):

@@ -6,3 +6,8 @@ script_generation:
 
 speech_generation:
   wait_sec: 20           # TTS ストリーム完了後に待機する秒数
+  voices:
+    - speaker: "Speaker 1"
+      voice_name: "Charon"
+    - speaker: "Speaker 2"
+      voice_name: "Gacrux"
