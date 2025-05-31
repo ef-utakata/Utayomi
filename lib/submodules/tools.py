@@ -270,16 +270,33 @@ def process_content(df: pd.DataFrame) -> str:
         print(f"Error:予期せぬエラーが発生しました。 {e}")
         return ""
 
-# 選の結果をmarkdown形式のpdfで出力する
+# 選評を Markdown で保存するユーティリティ
+#
+# out_csv には「保存先ディレクトリを示すダミー CSV ファイルパス」を渡す想定だったが、
+# 呼び出し側の柔軟性を高めるため
+#  1) ディレクトリ部分
+#  2) ベースファイル名（拡張子を除く）
+# を抽出して `dirname/base_name.md` の形で出力するだけに簡素化した。
+#
+# これにより呼び出し側で `out_csv` を自由に構築することで、
+# 任意のファイル名規約に従った Markdown 生成が可能になる。
+
 def selection_markdown(model, result, out_csv):
-    
-    basename_without_ext = os.path.splitext(os.path.basename(out_csv))[0]
-    dirname = os.path.splitext(os.path.dirname(out_csv))[0]
-    
-    out_path =  dirname + "/" + basename_without_ext + ".selection.md"
-    print(Fore.YELLOW + "[MESSAGE]: 選評を[" + str(out_path) + "]に出力します..."  + Fore.RESET)
-    
-    with open(out_path, mode='w') as f:
+
+    # directory to save under
+    dirname = os.path.dirname(out_csv)
+    if dirname == "":
+        dirname = "."
+
+    base_name = os.path.splitext(os.path.basename(out_csv))[0]
+
+    out_path = os.path.join(dirname, f"{base_name}.md")
+
+    print(
+        Fore.YELLOW + f"[MESSAGE]: 選評を[{out_path}]に出力します…" + Fore.RESET
+    )
+
+    with open(out_path, "w", encoding="utf-8") as f:
         f.write(result)
-    
-    # 以前はここで Markdown→PDF 変換を行っていたが、PDF 生成は廃止。
+
+    # Markdown→PDF 変換は廃止済み。

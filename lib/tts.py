@@ -190,6 +190,7 @@ def generate_radio_script(
     model_name: str = "gemini-2.5-pro-preview",
     temperature: float = 0.7,
     wait_sec: int = 20,
+    theme: str | None = None,
 ) -> str:
     """Generate a radio-show style script from *selection_markdown*.
 
@@ -204,8 +205,25 @@ def generate_radio_script(
     with open(template_path, "r", encoding="utf-8") as f:
         template = f.read()
 
-    # simple replacement
-    prompt_text = template.replace("{出力した選評とコメントをここに入力}", selection_markdown)
+    # ---------------------------------------
+    # テンプレート置換
+    # ---------------------------------------
+
+    prompt_text = template.replace(
+        "{出力した選評とコメントをここに入力}", selection_markdown
+    )
+
+    # お題セクションを置換（テンプレートに含まれていない場合も考慮）
+    if "{お題セクション}" in prompt_text:
+        if theme and str(theme) not in ("0", "", "None"):
+            theme_sentence = (
+                f"今回のお題は「{theme}」です。そのお題で詠まれた短歌について"
+                "Gemini が選評を行いました。"
+            )
+        else:
+            theme_sentence = ""
+        prompt_text = prompt_text.replace("{お題セクション}", theme_sentence)
+    # 旧テンプレート互換: placeholder がない場合は何もしない
 
     import google.generativeai as genai
 

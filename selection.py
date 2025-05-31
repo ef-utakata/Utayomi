@@ -8,6 +8,9 @@ import colorama
 from colorama import Fore, Back, Style
 
 import torch
+# 標準ライブラリ
+import re
+
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # 自作 TTS モジュール
@@ -19,7 +22,7 @@ from lib.submodules.model_load import *
 from lib.tanka_critic import *
 from lib.cli import get_common_parser, handle_version, handle_list, load_config
 
-ver = """Utayomi-selection Version: 0.2.0
+ver = """Utayomi-selection Version: 0.2.1
 設計: ef_utakata
 """
 
@@ -38,10 +41,27 @@ args = parser.parse_args()
 handle_version(args, ver)
 theme = args.theme
 num = args.number
+
+# --------------------------------------------------
+# ファイル名に使用する共通 basename を生成
+# {入力ファイルのbasename}_{引数aの値}_{引数iの値}
+# --------------------------------------------------
+input_basename = os.path.splitext(os.path.basename(args.input))[0]
+
+# `application` はファイル名に使えない文字（スペース、スラッシュなど）が含まれる
+# 可能性があるため簡易的に置換しておく
+application_raw = args.application if args.application else "application"
+application_sanitized = re.sub(r"[\s/\\]", "_", application_raw)
+
+# モデル識別子は必須引数なので存在する前提
+ident = args.identifier
+
+common_basename = f"{input_basename}_{application_sanitized}_{ident}"
 start_A = datetime.datetime.now()
+yml = load_config(args.config, ident)
 handle_list(args)
 
-ident = args.identifier
+# load model configuration
 yml = load_config(args.config, ident)
 
 # 入力ファイルと出力先のパスを指定（途中生成がある場合はその部分から再開）
@@ -88,17 +108,24 @@ def attach_authors_to_output(text, df):
             new = new.replace(content, f"{content}（作者：{author}）", 1)
     return new
 
+#
+# 出力 Markdown の保存
+# --------------------------------------------------
 output = attach_authors_to_output(output, df)
-selection_markdown(ident, output, df_temp_path)
+
+# markdown 保存用にダミー CSV パスを構築（tools.selection_markdown は拡張子を除いてベース名を利用）
+markdown_dummy_csv = os.path.join(os.path.dirname(df_temp_path), f"{common_basename}.csv")
+
+selection_markdown(ident, output, markdown_dummy_csv)
 
 # -----------------------------------------------------------------
 # TTS 出力 (オプション)
 # -----------------------------------------------------------------
 if args.tts:
     try:
-        basename_without_ext = os.path.splitext(os.path.basename(df_temp_path))[0]
-        dirname = os.path.splitext(os.path.dirname(df_temp_path))[0]
-        md_path = dirname + "/" + basename_without_ext + ".selection.md"
+        output_dir = os.path.dirname(df_temp_path)
+
+        md_path = os.path.join(output_dir, f"{common_basename}.md")
 
         if not os.path.exists(md_path):
             print(Fore.RED + f"[ERROR]: Markdown ファイル {md_path} が見つかりません。TTS をスキップします。" + Fore.RESET)
@@ -130,10 +157,11 @@ if args.tts:
                 model_name=script_model,
                 temperature=script_temp,
                 wait_sec=script_wait,
+                theme=theme,
             )
 
             # save generated script for reference
-            script_path = dirname + "/" + basename_without_ext + ".radio_script.txt"
+            script_path = os.path.join(output_dir, f"{common_basename}.radio_script.txt")
             with open(script_path, 'w', encoding='utf-8') as f:
                 f.write(radio_script)
 
@@ -142,7 +170,7 @@ if args.tts:
             # --- TTS ------------------------------------------------------
             speech_conf = tts_conf.get('speech_generation', {})
             speech_wait = speech_conf.get('wait_sec', 20)
-            output_base = dirname + "/" + basename_without_ext + ".selection"
+            output_base = os.path.join(output_dir, common_basename)
 
             print(Fore.YELLOW + "[MESSAGE]: TTS を実行しています…" + Fore.RESET)
             audio_file = generate_speech(
