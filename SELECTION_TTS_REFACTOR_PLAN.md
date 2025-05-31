@@ -12,8 +12,8 @@
 | 項目 | 現状実装 | 変更後に必要な機能 |
 |------|-----------|--------------------|
 | PDF 生成 | `lib/submodules/tools.selection_markdown()` 内で `markdown→html→pdfkit` 変換 | 不要。処理呼び出し・依存ライブラリ(pdfkit, wkhtmltopdf) と関連コードを削除 |
-| Markdown 出力 | 既に同関数が `*.selection.md` を書き出す | 継続利用 (生成タイミング・内容はそのまま) |
-| TTS 生成 | `tts_tool.py` に Gemini Multi-Speaker TTS を呼ぶ `generate_speech()` 実装あり。CLI とは独立 | ・Markdown テキストを入力に TTS を実行し、`*.wav/ogg` を保存<br>・`selection.py` から呼び出す<br>・音声ファイル名は Markdown と同ベース名 |
+| Markdown 出力 | `lib/submodules/tools.selection_markdown()` が `basename.md` を書き出す (basename は `{input}_{a}_{i}`) | 継続利用 |
+| TTS 生成 | `lib/tts.py` が Gemini Multi-Speaker TTS を呼ぶ `generate_speech()` 実装あり | ・Markdown → ラジオ原稿 → TTS → `basename.wav/ogg` 保存<br>・`selection.py` から呼び出す |
 | CLI インタフェース | `selection.py` は TTS 関連オプションを持たない | ・`--tts` (flag) : 有効時のみ TTS 実行<br>・`--voice-model`, `--speaker`, `--audio-format` など拡張オプション (後方互換を保ったまま) |
 | ライブラリ依存 | pdfkit / wkhtmltopdf が必須 | Prisma: pdfkit を削除。google-genai は既に `tts_tool.py` で使用、requirements.txt へ追加が必要な場合あり |
 
@@ -60,7 +60,7 @@
 ### C. CLI 拡張
 5. [x] `selection.py` に `--tts` (store_true)、`--voice-model` (default: gemini-2.5-pro-preview-tts) などを追加。
 6. [x] Markdown → ラジオ原稿生成 → TTS の 2 段処理を追加
-7. [x] 原稿を `*.radio_script.txt`、音声を `*.selection.[ext]` として保存。
+7. [x] 原稿を `basename.radio_script.txt`、音声を `basename.[ext]` として保存。
 
 ### D. ドキュメント更新
 8. [x] README.md → 選評モードの例を Markdown＋TTS へ更新。

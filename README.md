@@ -26,10 +26,16 @@
     * シートごとにCSVファイルを生成し、短歌内容・作者・作者コメント列の自動検出を実装
     * --encodingオプションでCSVの文字エンコーディングを指定可能
 
-* 2025年5月31日: 0.9.0 公開
-    * 選評モードにラジオ番組風原稿生成＋Gemini TTS 音声出力フロー(--tts)を追加
-    * 選評モードのPDF出力を廃止し Markdown のみへ変更
-    * generate_script_prompt.md, tts_generation_config.yaml を追加
+* 2025年5月31日: 1.0.0 公開
+    * 選評モード: ラジオ番組風原稿生成＋Gemini TTS 音声出力 (--tts) を追加
+    * 出力ファイル名を `{入力CSV名}_{-a値}_{-i値}.{拡張子}` へ統一
+      - Markdown  `.md`
+      - ラジオ原稿 `.radio_script.txt`
+      - 音声ガイド `.wav` (API により変化あり)
+    * PDF 出力を完全廃止
+    * テンプレート `generate_script_prompt.md` に `{お題セクション}` プレースホルダを追加し
+      `-t <お題>` 指定時に原稿へお題説明を自動挿入
+    * 各種ドキュメント更新
 
 ## 対応モデル
 以下の形式のモデルに対応しています。
@@ -152,11 +158,20 @@ python pipeline.py \
 ## 選評モード
 入力された短歌一覧を一度にLLMに入力し、指定した数の歌を選んでコメントを出力するスクリプトです。
 2024年11月24日現在、入力コンテキスト長の長いモデル(Gemini, Mistral-Nemo-Japanese)でのみ実行可能です。
-出力結果は Markdown (`*.selection.md`) で保存されます。`--tts` フラグを付けると、
-1. Markdown をもとに Gemini が **ラジオ番組風の原稿** を生成 (`*.radio_script.txt`)
-2. その原稿を Gemini TTS で音声化し WAV / Ogg 等の音声ファイル (`*.selection.wav` など)
+出力ファイル一式は **入力 CSV 名・応募区分(-a)・モデル識別子(-i)** を組み合わせた
+共通 basename で保存されます。
 
-までを自動で行います。選評モードでの PDF 生成は廃止されました。
+例: `input/April22.csv`、`-a 4月自選`、`-i Gemini` の場合
+
+```
+output/
+├─ April22_4月自選_Gemini.md                # 選評 Markdown
+├─ April22_4月自選_Gemini.radio_script.txt  # ラジオ番組風原稿
+└─ April22_4月自選_Gemini.wav               # 音声ガイド (拡張子は API に依存)
+```
+
+`--tts` を付けない場合は Markdown のみ生成されます。付けると上記 1→2 の流れ
+（原稿生成 → TTS）が追加で実行されます。PDF 出力は廃止されました。
 
 以下のコマンドで、-i に入力可能な設定識別子一覧を表示できます。
 
