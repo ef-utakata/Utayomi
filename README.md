@@ -147,7 +147,11 @@ python pipeline.py \
 ## 選評モード
 入力された短歌一覧を一度にLLMに入力し、指定した数の歌を選んでコメントを出力するスクリプトです。
 2024年11月24日現在、入力コンテキスト長の長いモデル(Gemini, Mistral-Nemo-Japanese)でのみ実行可能です。
-出力先のディレクトリに各LLMからの選評結果をmarkdown形式のテキストとpdfファイルで出力します。
+出力結果は Markdown (`*.selection.md`) で保存されます。`--tts` フラグを付けると、
+1. Markdown をもとに Gemini が **ラジオ番組風の原稿** を生成 (`*.radio_script.txt`)
+2. その原稿を Gemini TTS で音声化し WAV / Ogg 等の音声ファイル (`*.selection.wav` など)
+
+までを自動で行います。選評モードでの PDF 生成は廃止されました。
 
 以下のコマンドで、-i に入力可能な設定識別子一覧を表示できます。
 
@@ -162,7 +166,7 @@ python selection.py -V
 ```
 
 ```sh
-# 選評モードで短歌を選ぶ例
+# 選評モードで短歌を選ぶ例 (Markdown のみ)
 python selection.py \
     -c ./model_selection_conf.yaml \ # 選評モード用のモデル設定ファイル
     -i Mistral-Nemo-Japanese \ # 選評に使用するモデルのidentifier
@@ -171,6 +175,19 @@ python selection.py \
     -n 8 \ # 選ぶ短歌の数
     ./output/demo/ \ # 結果の出力先ディレクトリ
     ./output/demo/ef_test_free_result.csv # 選評対象の短歌一覧CSVファイル
+```
+
+### TTS 付きで原稿・音声も生成する例
+
+```bash
+python selection.py \
+    -c ./model_selection_conf.yaml \
+    -i Gemini \                 # 原稿生成・TTS には Gemini を推奨
+    -n 8 \
+    --tts \                     # 音声化を有効化
+    --tts-config ./tts_generation_config.yaml \  # 原稿用設定 (デフォルトは同パス)
+    ./output/demo/ \
+    ./output/demo/ef_test_free_result.csv
 ```
 
 

@@ -4,6 +4,7 @@ import re
 import colorama
 from colorama import Fore, Back, Style
 import random
+# Markdown ライブラリは Markdown→HTML 変換のために残す
 import markdown
 import pdfkit
 
@@ -281,13 +282,4 @@ def selection_markdown(model, result, out_csv):
     with open(out_path, mode='w') as f:
         f.write(result)
     
-    # Markdownファイルの読み込み
-    with open(out_path, 'r', encoding='utf-8') as f:
-        text = f.read()
-        
-    pdf_out_path =  dirname + "/" + basename_without_ext + ".selection.pdf"
-    print(Fore.YELLOW + "[MESSAGE]:選評を[" + str(pdf_out_path) + "]に出力します..."  + Fore.RESET)
-    # MarkdownからHTMLへの変換
-    html = markdown.markdown(text,extensions=['tables'])
-    # HTMLからPDFへの変換
-    pdfkit.from_string(html, pdf_out_path, options={'encoding': 'utf-8'})
+    # 以前はここで Markdown→PDF 変換を行っていたが、PDF 生成は廃止。
