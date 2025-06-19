@@ -244,10 +244,14 @@ def generate_radio_script(
 
     print(f"[MESSAGE]: Gemini にラジオ原稿生成を依頼しています … ({model_name})")
 
+    config = genai.types.GenerateContentConfig(
+        temperature=temperature,
+    )
+    
     response = client.models.generate_content(
         model=model_name,
         contents=prompt_text,
-        generation_config=genai.types.GenerationConfig(temperature=temperature),
+        config=config,
     )
 
     if not response.parts:

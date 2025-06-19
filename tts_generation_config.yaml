@@ -2,10 +2,10 @@ script_generation:
   model_name: "gemini-2.5-flash-preview-05-20"
   temperature: 0.7
   prompt_template: "./generate_script_prompt.md"
-  wait_sec: 20           # Gemini API 呼び出し後に待機する秒数(原稿生成)
+  wait_sec: 60           # Gemini API 呼び出し後に待機する秒数(原稿生成)
 
 speech_generation:
-  wait_sec: 20           # TTS ストリーム完了後に待機する秒数
+  wait_sec: 60           # TTS ストリーム完了後に待機する秒数
   voices:
     - speaker: "Speaker 1"
       voice_name: "Charon"

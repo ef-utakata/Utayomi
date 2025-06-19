@@ -67,6 +67,11 @@
     * 選評出力での作者名Markdownリンク機能: Author_URL列がある場合、作者名をクリック可能リンクとして表示
     * gitignore設定の改善とコードベース整理
 
+* 2025年6月19日: 1.1.3 公開
+    * TTS生成時のGemini API互換性問題を修正（generation_config引数エラーの解決）
+    * デバッグモード追加: `--debug`フラグでLLMからの生出力を中間ファイルとして保存
+    * selection.pyの安定性とデバッグ性を向上
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)
@@ -243,6 +248,18 @@ python selection.py \
     -n 8 \
     --tts \                     # 音声化を有効化
     --tts-config ./tts_generation_config.yaml \  # 原稿用設定 (デフォルトは同パス)
+    ./output/demo/ \
+    ./output/demo/ef_test_free_result.csv
+```
+
+### デバッグモード（開発・トラブルシューティング用）
+
+```bash
+python selection.py \
+    -c ./model_selection_conf.yaml \
+    -i Gemini \
+    -n 5 \
+    --debug \                   # LLMからの生出力も中間ファイルとして保存
     ./output/demo/ \
     ./output/demo/ef_test_free_result.csv
 ```

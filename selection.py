@@ -36,6 +36,8 @@ parser.add_argument('-a', '--application', help='応募企画・応募分野の�
 parser.add_argument('--tts', action='store_true', help='選評MarkdownをTTSで音声化しファイル出力する')
 parser.add_argument('--voice-model', default='gemini-2.5-pro-preview-tts', help='TTS に使用する Gemini モデル名')
 parser.add_argument('--tts-config', default='./tts_generation_config.yaml', help='原稿生成用の設定ファイル')
+# デバッグオプション
+parser.add_argument('--debug', action='store_true', help='デバッグモード: LLMからの生の出力も保存する')
 
 args = parser.parse_args()
 handle_version(args, ver)
@@ -125,6 +127,17 @@ def attach_authors_to_output(text, df):
             
             new = new.replace(content, f"{content}（作者：{author_link}）", 1)
     return new
+
+#
+# デバッグモード: 生の LLM 出力を保存
+# --------------------------------------------------
+if args.debug:
+    raw_output_path = os.path.join(args.output, f"{common_basename}_raw_output.md")
+    print(f"{Fore.YELLOW}[DEBUG]: LLMからの生出力を保存します: {raw_output_path}{Style.RESET_ALL}")
+    with open(raw_output_path, 'w', encoding='utf-8') as f:
+        # ヘッダーを除いた生の出力のみを保存
+        raw_content = output.split("## ")[1].split("首の選評:\n", 1)[1] if "## " in output and "首の選評:\n" in output else output
+        f.write(raw_content)
 
 #
 # 出力 Markdown の保存
