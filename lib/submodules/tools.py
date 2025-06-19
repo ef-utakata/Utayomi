@@ -13,6 +13,11 @@ def tanka_preprocess(input_csv):
     df = pd.DataFrame()
     df_raw = pd.read_csv(input_csv)
 
+    # No列がない場合は自動で追加
+    if 'No' not in df_raw.columns:
+        print(Fore.YELLOW + "[MESSAGE]: No列が見つかりません。自動で通し番号を追加します..." + Fore.RESET)
+        df_raw.insert(0, 'No', range(1, len(df_raw) + 1))
+
     #解析に用いる列のみを抽出(Human assistの列がある場合は取り込み、ない場合はゼロ埋め)
     if ("Human_comment" in df_raw.columns):
         df = df_raw[['Content','Author_comment','No','Author','Human_comment']]
@@ -24,7 +29,32 @@ def tanka_preprocess(input_csv):
         df = df.fillna("NaN")
     #単作、Human assistナシの場合の処理
     else:
-        df = df_raw[['Content','Author_comment','No','Author']]
+        # 必須列とオプション列の定義
+        required_cols = ['Content', 'No']
+        
+        # 必須列の存在確認
+        missing_cols = [col for col in required_cols if col not in df_raw.columns]
+        if missing_cols:
+            print(Fore.RED + f"[ERROR]: 必須列が不足しています: {missing_cols}" + Fore.RESET)
+            exit()
+        
+        # Author列がない場合は空文字列で埋める
+        if 'Author' not in df_raw.columns:
+            print(Fore.YELLOW + "[MESSAGE]: Author列が見つかりません。空文字列で埋めます..." + Fore.RESET)
+            df_raw['Author'] = ''
+        
+        # Author_comment列がない場合は空文字列で埋める
+        if 'Author_comment' not in df_raw.columns:
+            print(Fore.YELLOW + "[MESSAGE]: Author_comment列が見つかりません。空文字列で埋めます..." + Fore.RESET)
+            df_raw['Author_comment'] = ''
+        
+        # 存在する列のみ選択
+        available_cols = []
+        for col in ['Content', 'Author_comment', 'No', 'Author']:
+            if col in df_raw.columns:
+                available_cols.append(col)
+        
+        df = df_raw[available_cols]
         df = df.fillna("NaN")
 
     # 空の行を除去
