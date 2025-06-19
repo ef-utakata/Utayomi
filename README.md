@@ -65,7 +65,6 @@
 * 2025年6月19日: 1.1.2 公開
     * CSV前処理の堅牢性を向上: No列がない場合の自動追加、不足列の自動補完機能を追加
     * 選評出力での作者名Markdownリンク機能: Author_URL列がある場合、作者名をクリック可能リンクとして表示
-    * `input/library/` 配下の実際の短歌データファイルを追加（selected.csv、連作データ等）
     * gitignore設定の改善とコードベース整理
 
 ## 対応モデル
@@ -149,10 +148,9 @@ python excel_to_csv.py input.xlsx output_directory [--encoding utf-8]
 * `ef_test_theme.csv`: 題詠（お題：「海」）の例
 * `ef_test_theme_sea_human_comment.csv`: AI評に対するコメントを入力した例
 
-**実際のデータ（input/library/ja/literature/tanka/monthly/2025/06/）:**
-* `selected.csv`: 280首の単首作品（Author_URL付き）
-* `series-regular.csv`: 一般的な連作作品
-* `series-three.csv`: 3首連作専用作品
+### 独自データの利用
+
+プロジェクト固有の短歌データがある場合は、`input/demo/`の形式を参考にCSVファイルを作成してください。
 
 これらをシステム上の対応モデルに入力して生成したコメントは、output/demoディレクトリ内にあります。
 
