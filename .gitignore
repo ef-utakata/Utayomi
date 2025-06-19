@@ -2,6 +2,9 @@ output/my_results
 output/*.csv
 input/*.csv
 input/demo/.*
+# input以下のディレクトリでdemo以外は無視
+input/*/
+!input/demo/
 models/*.gguf
 notebook.ipynb
 .ipynb_checkpoints
