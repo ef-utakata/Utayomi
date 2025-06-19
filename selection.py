@@ -103,9 +103,27 @@ output = f"""# {application}
 
 def attach_authors_to_output(text, df):
     new = text
-    for content, author in sorted(zip(df['Content'], df['Author']), key=lambda x: len(x[0]), reverse=True):
+    # Author_URL列が存在するかチェック
+    has_url_column = 'Author_URL' in df.columns
+    
+    # Content, Author, Author_URLを組み合わせてソート
+    if has_url_column:
+        content_author_url = list(zip(df['Content'], df['Author'], df['Author_URL']))
+    else:
+        content_author_url = list(zip(df['Content'], df['Author'], [None] * len(df)))
+    
+    # 長い順にソート（部分文字列の置換問題を回避）
+    sorted_entries = sorted(content_author_url, key=lambda x: len(x[0]) if x[0] else 0, reverse=True)
+    
+    for content, author, author_url in sorted_entries:
         if content and content in new:
-            new = new.replace(content, f"{content}（作者：{author}）", 1)
+            # Author_URLがある場合はMarkdownリンクを作成
+            if author_url and str(author_url).strip() and str(author_url).strip().lower() != 'nan':
+                author_link = f"[{author}]({author_url})"
+            else:
+                author_link = author
+            
+            new = new.replace(content, f"{content}（作者：{author_link}）", 1)
     return new
 
 #
