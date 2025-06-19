@@ -14,3 +14,5 @@ llama.cpp
 # ローカル調査用ドキュメント（リモートに不要）
 research/
 tests/
+# 開発者用ファイル（リモートに不要）
+CLAUDE.md
