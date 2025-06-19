@@ -62,6 +62,12 @@
     * 旧 `google-generativeai` SDK を廃止し **`google-genai >=0.8.5`** へ移行
     * 単体テスト `tests/test_tts.py` を追加（API キーがある環境で音声生成を検証）
 
+* 2025年6月19日: 1.1.2 公開
+    * CSV前処理の堅牢性を向上: No列がない場合の自動追加、不足列の自動補完機能を追加
+    * 選評出力での作者名Markdownリンク機能: Author_URL列がある場合、作者名をクリック可能リンクとして表示
+    * `input/library/` 配下の実際の短歌データファイルを追加（selected.csv、連作データ等）
+    * CLAUDE.md開発ガイドラインの整備とgitignore設定の改善
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)
@@ -118,29 +124,37 @@ python excel_to_csv.py input.xlsx output_directory [--encoding utf-8]
 
 ## 入力ファイルの記述方法
 入力フォーマット:csv(UTF-8)ファイル(以下のフォーマットに従って記述されているもの)
+
+### 基本形式
 * 先頭行(header): No,Content,Author,Author_comment,Human_comment
-    * No: 通し番号(1から順番)
-    * Content: 短歌
-    * Author: 作者名
-    * Author_comment: 作者コメント
-    * Human_comment: AI評を確認してコメントを付与する場合に使う列(オプション)
+    * **No**: 通し番号(1から順番) ※ない場合は自動で追加されます
+    * **Content**: 短歌（必須）
+    * **Author**: 作者名 ※ない場合は空文字列で補完されます
+    * **Author_comment**: 作者コメント ※ない場合は空文字列で補完されます
+    * **Human_comment**: AI評を確認してコメントを付与する場合に使う列(オプション)
 
-自作短歌を用いた入力例はinput/demoディレクトリ内にあります。
+### 拡張形式（選評モード用）
+* 追加可能な列:
+    * **Author_URL**: 作者のSNS/WebサイトURL（選評出力時に作者名がクリック可能リンクになります）
+    * **Title**: 連作のタイトル（連作作品の場合）
+    * **Eiso_count**: 連作の首数（連作作品の場合）
+    * **Editor_memo**: 編集者メモ
+    * **Create DateTime**: 作成日時
+    * **LICENSE**: ライセンス情報
 
-* input/ef_test_free.csv: 自由詠
-* input/ef_test_theme.csv: 題詠（お題：「海」）
-* input/ef_test_theme_sea_human_comment.csv: 自由詠、AI評に対するコメントを入力した例
+### サンプルデータ
+
+**デモ用データ（input/demo/）:**
+* `ef_test_free.csv`: 自由詠の例
+* `ef_test_theme.csv`: 題詠（お題：「海」）の例
+* `ef_test_theme_sea_human_comment.csv`: AI評に対するコメントを入力した例
+
+**実際のデータ（input/library/ja/literature/tanka/monthly/2025/06/）:**
+* `selected.csv`: 280首の単首作品（Author_URL付き）
+* `series-regular.csv`: 一般的な連作作品
+* `series-three.csv`: 3首連作専用作品
 
 これらをシステム上の対応モデルに入力して生成したコメントは、output/demoディレクトリ内にあります。
-
-* input/ef_test_free_Ninja-v2-7b.csv:
-    * 自由詠(歌会モードで出力された列を含む)
-
-* input/ef_test_theme_Ninja-v2-7b.csv:
-    * 題詠（お題：「海」）
-
-* input/ef_test_theme_sea_human_comment_Ninja-v2-7b.csv:
-    * AI評に対するコメントを入力したもの
 
 ## 出力ファイルの記述形式
 出力フォーマット:csv(UTF-8)

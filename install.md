@@ -26,9 +26,9 @@ bash ~/miniconda.sh -b -p $HOME/miniconda
 
 # terminalを再起動, condaコマンドが動作することを確認
 
-# tankaAIの仮想環境を構築
-conda create -n tankaAI python=3.11 jupyterlab
-conda activate tankaAI
+# Utayomiの仮想環境を構築（2025年推奨）
+conda create -n utayomi python=3.11 jupyterlab
+conda activate utayomi
 
 # GPUで動作するpytorchのインストール
 conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
@@ -42,9 +42,11 @@ python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 git clone https://github.com/ef-utakata/Utayomi.git
 cd Utayomi
 # 動作に必要なpythonライブラリのインストール
-# 旧 SDK をアンインストールし、新 SDK をインストール
-pip uninstall -y google-generativeai || true
-pip install -r ./requirements.txt  # requirements.txt には google-genai>=0.8.5 と pytest が記載されています
+# requirements.txt には主要な依存関係が記載されています:
+# - google-genai>=0.8.5 (Gemini API用)
+# - pytest (テスト用)
+# - pandas, pyyaml, colorama, openai, cohere 等
+pip install -r ./requirements.txt
 
 # llama-cpp-python(GPU対応)をインストール(cuda-12の場合)
 export CUDACXX="/usr/local/cuda-12/bin/nvcc"
@@ -52,7 +54,17 @@ export CMAKE_ARGS="-DLLAMA_CUBLAS=on -DCMAKE_CUDA_ARCHITECTURES=all-major"
 export FORCE_CMAKE=1 
 pip install fsspec llama-cpp-python --no-cache-dir --force-reinstall --upgrade
 
-## llama-cppをリポジトリ内にコンパイル
+## llama-cppをリポジトリ内にコンパイル（ローカルLLM使用時のみ必要）
 git clone https://github.com/ggerganov/llama.cpp
 cd llama.cpp
 make GGML_CUDA=1
+
+# 選評モード（推奨機能）の動作確認
+cd ../
+python selection.py --list  # 利用可能なモデル一覧を表示
+python selection.py -V      # バージョン情報を表示
+
+# API キーの設定（使用するAPIに応じて）
+export GOOGLE_API_KEY="your_gemini_api_key"     # Gemini使用時
+export OPENAI_API_KEY="your_openai_api_key"     # GPT使用時
+export COHERE_API_KEY="your_cohere_api_key"     # Cohere使用時
