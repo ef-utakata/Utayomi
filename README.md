@@ -72,13 +72,19 @@
     * デバッグモード追加: `--debug`フラグでLLMからの生出力を中間ファイルとして保存
     * selection.pyの安定性とデバッグ性を向上
 
+* 2025年6月20日: 1.1.4 公開
+    * 依存関係セキュリティ更新: GitHub Dependabot アラート対応
+    * TTS生成の追加API互換性問題を修正（'GenerateContentResponse' object has no attribute 'parts'）
+    * 手動編集済みMarkdownからTTS再生成するスタンドアロンスクリプト `markdown_to_tts.py` を追加
+    * 依存関係の構文エラー修正と最新バージョンへの更新
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)
 2. gguf形式の量子化モデル(llama.cppまたはllama-cpp-pythonを使用)
 3. openAI APIで利用できるモデル(GPT-4oなど)
 4. cohere APIで利用できるモデル(Command r+)
-5. google.generativeai APIで利用できるモデル(Gemini-1.5-proなど)
+5. google-genai (>=0.8.5) APIで利用できるモデル(Gemini-1.5-proなど)
 
 2024年7月25日時点で、以下のモデルを用いた入力短歌へのコメントの出力が可能です。
 
@@ -262,6 +268,18 @@ python selection.py \
     --debug \                   # LLMからの生出力も中間ファイルとして保存
     ./output/demo/ \
     ./output/demo/ef_test_free_result.csv
+```
+
+### 手動編集後のTTS再生成
+
+選評結果を手動編集した後、音声のみを再生成したい場合:
+
+```bash
+python markdown_to_tts.py \
+    output/April22_4月自選_Gemini.md \  # 編集済みMarkdownファイル
+    output/ \                           # 出力ディレクトリ
+    --theme "お題名" \                  # お題指定（オプション）
+    --config ./tts_generation_config.yaml  # TTS設定ファイル（オプション）
 ```
 
 
