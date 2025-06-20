@@ -189,6 +189,7 @@ if args.tts:
                 temperature=script_temp,
                 wait_sec=script_wait,
                 theme=theme,
+                application=application,
             )
 
             # save generated script for reference

@@ -204,6 +204,7 @@ def generate_radio_script(
     temperature: float = 0.7,
     wait_sec: int = 20,
     theme: str | None = None,
+    application: str | None = None,
 ) -> str:
     """Generate a radio-show style script from *selection_markdown*.
 
@@ -225,6 +226,14 @@ def generate_radio_script(
     prompt_text = template.replace(
         "{出力した選評とコメントをここに入力}", selection_markdown
     )
+
+    # 企画セクションを置換（テンプレートに含まれていない場合も考慮）
+    if "{企画セクション}" in prompt_text:
+        if application and str(application) not in ("0", "", "None"):
+            application_sentence = f"今回の投稿企画は「{application}」です。"
+        else:
+            application_sentence = ""
+        prompt_text = prompt_text.replace("{企画セクション}", application_sentence)
 
     # お題セクションを置換（テンプレートに含まれていない場合も考慮）
     if "{お題セクション}" in prompt_text:
@@ -254,10 +263,13 @@ def generate_radio_script(
         config=config,
     )
 
-    if not response.parts:
+    # New Gemini API response handling
+    if hasattr(response, 'text') and response.text:
+        script_text = response.text
+    elif hasattr(response, 'parts') and response.parts:
+        script_text = response.text
+    else:
         raise RuntimeError("Gemini script generation returned empty response.")
-
-    script_text = response.text
 
     if wait_sec > 0:
         import time

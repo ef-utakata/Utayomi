@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--config', default='./tts_generation_config.yaml', 
                         help='TTS configuration file (default: ./tts_generation_config.yaml)')
     parser.add_argument('--theme', help='Theme for radio script generation')
+    parser.add_argument('--application', help='Application/project name for radio script generation')
     parser.add_argument('--template', default='./generate_script_prompt.md',
                         help='Script generation template (default: ./generate_script_prompt.md)')
     
@@ -75,7 +76,8 @@ def main():
             model_name=script_config['model_name'],
             temperature=script_config['temperature'],
             wait_sec=script_config['wait_sec'],
-            theme=args.theme
+            theme=args.theme,
+            application=args.application
         )
         
         # Save radio script
