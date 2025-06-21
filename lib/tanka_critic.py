@@ -225,3 +225,45 @@ def nemo_select(configs, model, tokenizer, df, result, num, theme):
     
     return(output)
 
+# geminiによる連作選評
+def gemini_series_select(configs, df, result, num, theme, series_content):
+    """連作対応のGemini選評関数"""
+    odai = ""
+    if not (theme == 0):
+        odai = f"テーマ「{theme}」での"
+    
+    genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+
+    system = "あなたは短歌の表現や内容を詳細に評価することのできる役立つアシスタントです。連作と単作の両方を適切に評価し、連作については各首の関連性や全体の構成も考慮して評価します。"
+    
+    test_prompt = f"""以下は、短歌投稿企画に{odai}投稿された短歌作品の一覧です。連作（複数首で構成される作品）と単作（1首の作品）が含まれています。
+
+```txt
+{series_content}
+```
+
+これらの投稿作品を読み込み、あなたが優れていると思った作品を{num}作品選び、各作品に1から{num}までの番号を振って、それぞれについて詳しくコメントしてください。
+
+**評価の観点:**
+- 連作の場合：各首の関連性、全体の構成、テーマの一貫性、展開の巧みさ
+- 単作の場合：言葉選び、表現の独創性、情景描写、感情の伝達力
+- いずれも：短歌としての技巧、読者への印象、普遍性と独自性のバランス
+
+**出力形式:**
+各作品について以下の形式で出力してください：
+
+### 1. 【連作/単作】作品タイトル（作者：作者名）
+（連作の場合は各首を列挙）
+（単作の場合は短歌を記載）
+
+選評コメント...
+
+最後に、選出した{num}作品全体についての総評をコメントしてください。
+"""
+
+    model = genai.GenerativeModel(model_name=configs["model_path"],
+                                  system_instruction=system)
+    response = model.generate_content(test_prompt,
+                                      generation_config=genai.types.GenerationConfig(temperature=configs["temperature"]))
+    return(response.text)
+

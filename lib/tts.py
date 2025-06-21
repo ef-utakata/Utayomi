@@ -205,13 +205,28 @@ def generate_radio_script(
     wait_sec: int = 20,
     theme: str | None = None,
     application: str | None = None,
+    is_series: bool = False,
 ) -> str:
     """Generate a radio-show style script from *selection_markdown*.
 
     The *template_path* must contain a placeholder string
     "{出力した選評とコメントをここに入力}" which will be replaced by the
     Markdown text.
+    
+    If is_series=True, automatically selects series-specific template.
     """
+
+    # 連作モードの場合は自動的に連作用テンプレートを選択
+    if is_series:
+        template_dir = os.path.dirname(template_path)
+        template_name = "generate_script_prompt_series.md"
+        series_template_path = os.path.join(template_dir, template_name)
+        
+        if os.path.exists(series_template_path):
+            template_path = series_template_path
+            print(f"[MESSAGE]: 連作モード - 連作用テンプレートを使用: {template_path}")
+        else:
+            print(f"[WARNING]: 連作用テンプレート {series_template_path} が見つかりません。通常テンプレートを使用します。")
 
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Prompt template not found: {template_path}")

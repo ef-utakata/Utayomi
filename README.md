@@ -78,6 +78,14 @@
     * 手動編集済みMarkdownからTTS再生成するスタンドアロンスクリプト `markdown_to_tts.py` を追加
     * 依存関係の構文エラー修正と最新バージョンへの更新
 
+* 2025年6月21日: 1.2.0 公開
+    * **連作（系列）対応**: `--series` オプションによる多首構成作品の評価機能を追加
+    * 連作専用の評価ロジック（`gemini_series_select()`）と評価プロンプトを実装
+    * 連作データの自動検出・展開処理（`SeriesProcessor`）を追加
+    * 連作専用TTS用ラジオ原稿テンプレート（`generate_script_prompt_series.md`）を実装
+    * TTSシステムで連作モード時の自動テンプレート選択機能を追加
+    * 連作データ形式: `Eiso_count`列で首数指定、改行区切りで複数首を`Content`列に格納
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)
@@ -147,10 +155,17 @@ python excel_to_csv.py input.xlsx output_directory [--encoding utf-8]
 * 追加可能な列:
     * **Author_URL**: 作者のSNS/WebサイトURL（選評出力時に作者名がクリック可能リンクになります）
     * **Title**: 連作のタイトル（連作作品の場合）
-    * **Eiso_count**: 連作の首数（連作作品の場合）
+    * **Eiso_count**: 連作の首数（連作作品の場合、`--series`モード時に必須）
     * **Editor_memo**: 編集者メモ
     * **Create DateTime**: 作成日時
     * **LICENSE**: ライセンス情報
+
+### 連作（シリーズ）データ形式
+連作作品を評価する場合（`--series`オプション使用時）:
+* **Eiso_count**: 連作の首数（例: 3首連作なら`3`）
+* **Content**: 改行区切りで複数の短歌を格納（例: `短歌1\n短歌2\n短歌3`）
+* **Title**: 連作のタイトル
+* 1行につき1つの連作作品を記述
 
 ### サンプルデータ
 
@@ -205,6 +220,7 @@ python pipeline.py \
 
 ## 選評モード
 入力された短歌一覧を一度にLLMに入力し、指定した数の歌を選んでコメントを出力するスクリプトです。
+単作（個別短歌）と連作（複数首構成）の両方に対応しています。
 2024年11月24日現在、入力コンテキスト長の長いモデル(Gemini, Mistral-Nemo-Japanese)でのみ実行可能です。
 出力ファイル一式は **入力 CSV 名・応募区分(-a)・モデル識別子(-i)** を組み合わせた
 共通 basename で保存されます。
@@ -268,6 +284,31 @@ python selection.py \
     --debug \                   # LLMからの生出力も中間ファイルとして保存
     ./output/demo/ \
     ./output/demo/ef_test_free_result.csv
+```
+
+### 連作（シリーズ）選評モード
+
+複数首で構成される連作作品を評価する場合:
+
+```bash
+# 連作選評（Markdownのみ）
+python selection.py \
+    -c ./model_selection_conf.yaml \
+    -i Gemini \                 # 連作評価には Gemini を推奨
+    -n 2 \                      # 選ぶ連作の数
+    --series \                  # 連作モードを有効化
+    ./output/demo/ \
+    ./input/series_data.csv     # 連作データ（Eiso_count列必須）
+
+# 連作選評 + TTS
+python selection.py \
+    -c ./model_selection_conf.yaml \
+    -i Gemini \
+    -n 2 \
+    --series \
+    --tts \                     # 連作専用TTSテンプレートを使用
+    ./output/demo/ \
+    ./input/series_data.csv
 ```
 
 ### 手動編集後のTTS再生成

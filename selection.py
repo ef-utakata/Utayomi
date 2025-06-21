@@ -38,6 +38,8 @@ parser.add_argument('--voice-model', default='gemini-2.5-pro-preview-tts', help=
 parser.add_argument('--tts-config', default='./tts_generation_config.yaml', help='原稿生成用の設定ファイル')
 # デバッグオプション
 parser.add_argument('--debug', action='store_true', help='デバッグモード: LLMからの生の出力も保存する')
+# 連作オプション
+parser.add_argument('--series', action='store_true', help='連作モード: 連作データとして処理する')
 
 args = parser.parse_args()
 handle_version(args, ver)
@@ -67,15 +69,66 @@ handle_list(args)
 yml = load_config(args.config, ident)
 
 # 入力ファイルと出力先のパスを指定（途中生成がある場合はその部分から再開）
-df, df_temp_path, df_merged = output_preprocess(args.input, 
-                                                args.output,
-                                                "first",
-                                                ident)
+if args.series:
+    # 連作モードの場合は、カラムを保持したままの生の読み込み
+    df = pd.read_csv(args.input)
+    
+    # No列がない場合は自動で追加
+    if 'No' not in df.columns:
+        print(Fore.YELLOW + "[MESSAGE]: No列が見つかりません。自動で通し番号を追加します..." + Fore.RESET)
+        df.insert(0, 'No', range(1, len(df) + 1))
+    
+    # Author列がない場合は空文字列で埋める
+    if 'Author' not in df.columns:
+        print(Fore.YELLOW + "[MESSAGE]: Author列が見つかりません。空文字列で埋めます..." + Fore.RESET)
+        df['Author'] = ''
+    
+    # Author_comment列がない場合は空文字列で埋める
+    if 'Author_comment' not in df.columns:
+        print(Fore.YELLOW + "[MESSAGE]: Author_comment列が見つかりません。空文字列で埋めます..." + Fore.RESET)
+        df['Author_comment'] = ''
+    
+    df = df.fillna("")
+    df_temp_path = os.path.join(args.output, f"{common_basename}.temp.csv")
+    df_merged = df
+else:
+    # 従来の単作モードの処理
+    df, df_temp_path, df_merged = output_preprocess(args.input, 
+                                                    args.output,
+                                                    "first",
+                                                    ident)
 
-print(Fore.YELLOW + f"[MESSAGE]: {ident}に{len(df)}首の短歌を入力し、選を行います。" + Fore.RESET)
-
-result = process_content(df)
-output = "出力エラー"
+# 連作処理分岐
+if args.series:
+    # 連作モード
+    from lib.series_processor import SeriesProcessor
+    from lib.tanka_critic import gemini_series_select
+    
+    print(Fore.YELLOW + f"[MESSAGE]: 連作モードで{len(df)}作品を処理します。" + Fore.RESET)
+    
+    # 連作データ処理
+    print(Fore.CYAN + f"[DEBUG]: 入力データの列: {list(df.columns)}" + Fore.RESET)
+    print(Fore.CYAN + f"[DEBUG]: Eiso_count列の値: {df['Eiso_count'].tolist() if 'Eiso_count' in df.columns else 'なし'}" + Fore.RESET)
+    
+    processor = SeriesProcessor()
+    processed_df = processor.process_series_csv(df)
+    
+    # 処理要約表示
+    summary = processor.get_series_summary()
+    print(Fore.CYAN + f"[INFO]: 連作{summary['total_series']}作品を展開、計{len(processed_df)}首を処理" + Fore.RESET)
+    
+    # 連作用プロンプト生成
+    series_content = processor.generate_series_prompt_content()
+    
+    # 選を生成（連作対応）
+    result = ""  # 連作モードでは使用しない
+    output = "出力エラー"
+else:
+    # 従来の単作モード
+    print(Fore.YELLOW + f"[MESSAGE]: {ident}に{len(df)}首の短歌を入力し、選を行います。" + Fore.RESET)
+    
+    result = process_content(df)
+    output = "出力エラー"
 
 # model typeを読み込み、trf/ggufならモデルをロード, それ以外は詳細なモデルを指定
 model_type = yml[ident]["model_type"]
@@ -88,7 +141,12 @@ elif(model_type == "gguf"):
 
 # 選を生成
 if (ident == "Gemini"):
-    output = gemini_select(yml[ident], df, result, num, theme)
+    if args.series:
+        # 連作対応Gemini選評
+        output = gemini_series_select(yml[ident], df, result, num, theme, series_content)
+    else:
+        # 従来の単作Gemini選評
+        output = gemini_select(yml[ident], df, result, num, theme)
     print(output)
     
 elif (ident == "Mistral-Nemo-Japanese"):
@@ -190,6 +248,7 @@ if args.tts:
                 wait_sec=script_wait,
                 theme=theme,
                 application=application,
+                is_series=args.series,
             )
 
             # save generated script for reference
