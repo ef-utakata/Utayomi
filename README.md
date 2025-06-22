@@ -75,7 +75,7 @@
 * 2025年6月20日: 1.1.4 公開
     * 依存関係セキュリティ更新: GitHub Dependabot アラート対応
     * TTS生成の追加API互換性問題を修正（'GenerateContentResponse' object has no attribute 'parts'）
-    * 手動編集済みMarkdownからTTS再生成するスタンドアロンスクリプト `markdown_to_tts.py` を追加
+    * 手動編集済みラジオ原稿からTTS再生成するスタンドアロンスクリプト `markdown_to_tts.py` を追加
     * 依存関係の構文エラー修正と最新バージョンへの更新
 
 * 2025年6月21日: 1.2.0 公開
@@ -313,14 +313,13 @@ python selection.py \
 
 ### 手動編集後のTTS再生成
 
-選評結果を手動編集した後、音声のみを再生成したい場合:
+ラジオ原稿を手動編集（漢字の読み方などを修正）した後、音声のみを再生成したい場合:
 
 ```bash
 python markdown_to_tts.py \
-    output/April22_4月自選_Gemini.md \  # 編集済みMarkdownファイル
-    output/ \                           # 出力ディレクトリ
-    --theme "お題名" \                  # お題指定（オプション）
-    --config ./tts_generation_config.yaml  # TTS設定ファイル（オプション）
+    output/April22_4月自選_Gemini.radio_script.txt \  # 編集済みラジオ原稿ファイル
+    output/ \                                        # 出力ディレクトリ
+    --config ./tts_generation_config.yaml           # TTS設定ファイル（オプション）
 ```
 
 
