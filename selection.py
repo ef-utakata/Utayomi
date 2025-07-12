@@ -104,11 +104,16 @@ if args.series:
     from lib.series_processor import SeriesProcessor
     from lib.tanka_critic import gemini_series_select
     
+    # 連作モードでも列名の正規化を適用
+    from lib.submodules.tools import normalize_column_names
+    df = normalize_column_names(df)
+    
     print(Fore.YELLOW + f"[MESSAGE]: 連作モードで{len(df)}作品を処理します。" + Fore.RESET)
     
     # 連作データ処理
     print(Fore.CYAN + f"[DEBUG]: 入力データの列: {list(df.columns)}" + Fore.RESET)
-    print(Fore.CYAN + f"[DEBUG]: Eiso_count列の値: {df['Eiso_count'].tolist() if 'Eiso_count' in df.columns else 'なし'}" + Fore.RESET)
+    eiso_count_col = 'Eiso_count' if 'Eiso_count' in df.columns else 'eiso_count'
+    print(Fore.CYAN + f"[DEBUG]: Eiso_count列の値: {df[eiso_count_col].tolist() if eiso_count_col in df.columns else 'なし'}" + Fore.RESET)
     
     processor = SeriesProcessor()
     processed_df = processor.process_series_csv(df)

@@ -30,7 +30,7 @@ class SeriesProcessor:
         series_count = 0
         
         for idx, row in df.iterrows():
-            content = row['Content']
+            content = row.get('Content', '')
             eiso_count = row.get('Eiso_count', 1)
             title = row.get('Title', '')
             author = row.get('Author', '')

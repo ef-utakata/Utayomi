@@ -7,26 +7,41 @@ import random
 # Markdown ライブラリは Markdown→HTML 変換のために残す
 import markdown
 
-# 完全新規の場合に、作品一覧のモデル入力を前処理
-def tanka_preprocess(input_csv):
-
-    df = pd.DataFrame()
-    df_raw = pd.read_csv(input_csv)
-    
+# 列名の正規化関数
+def normalize_column_names(df):
+    """
+    DataFrameの列名を正規化する（小文字→大文字）
+    """
     # 列名の正規化（小文字→大文字）
     column_mapping = {
         'content': 'Content',
         'author': 'Author', 
         'author_comment': 'Author_comment',
         'author_url': 'Author_URL',
-        'no': 'No'
+        'no': 'No',
+        'title': 'Title',
+        'eiso_count': 'Eiso_count',
+        'editor_memo': 'Editor_memo',
+        'create_datetime': 'Create_datetime',
+        'license': 'License'
     }
     
     # 列名を正規化
     for old_name, new_name in column_mapping.items():
-        if old_name in df_raw.columns and new_name not in df_raw.columns:
-            df_raw.rename(columns={old_name: new_name}, inplace=True)
+        if old_name in df.columns and new_name not in df.columns:
+            df.rename(columns={old_name: new_name}, inplace=True)
             print(Fore.CYAN + f"[INFO]: 列名を正規化しました: {old_name} → {new_name}" + Fore.RESET)
+    
+    return df
+
+# 完全新規の場合に、作品一覧のモデル入力を前処理
+def tanka_preprocess(input_csv):
+
+    df = pd.DataFrame()
+    df_raw = pd.read_csv(input_csv)
+    
+    # 列名の正規化
+    df_raw = normalize_column_names(df_raw)
 
     # No列がない場合は自動で追加
     if 'No' not in df_raw.columns:
@@ -65,7 +80,7 @@ def tanka_preprocess(input_csv):
         
         # 存在する列のみ選択
         available_cols = []
-        for col in ['Content', 'Author_comment', 'No', 'Author']:
+        for col in ['Content', 'Author_comment', 'No', 'Author', 'Author_URL']:
             if col in df_raw.columns:
                 available_cols.append(col)
         
