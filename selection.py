@@ -22,7 +22,7 @@ from lib.submodules.model_load import *
 from lib.tanka_critic import *
 from lib.cli import get_common_parser, handle_version, handle_list, load_config
 
-ver = """Utayomi-selection Version: 0.2.1
+ver = """Utayomi-selection Version: 1.3.1
 設計: ef_utakata
 """
 
@@ -34,7 +34,7 @@ parser.add_argument('-n', '--number', help='選ぶ短歌の数', default=5)
 parser.add_argument('-a', '--application', help='応募企画・応募分野の名称', default="毎月短歌")
 # TTS 連携オプション
 parser.add_argument('--tts', action='store_true', help='選評MarkdownをTTSで音声化しファイル出力する')
-parser.add_argument('--voice-model', default='gemini-2.5-pro-preview-tts', help='TTS に使用する Gemini モデル名')
+parser.add_argument('--voice-model', default='gemini-2.5-pro-preview-tts', help='TTS に使用する Gemini モデル名（課金設定のあるAPIキーが必要）')
 parser.add_argument('--tts-config', default='./tts_generation_config.yaml', help='原稿生成用の設定ファイル')
 # デバッグオプション
 parser.add_argument('--debug', action='store_true', help='デバッグモード: LLMからの生の出力も保存する')
@@ -140,7 +140,7 @@ elif(model_type == "gguf"):
     model, tokenizer = gguf_load(yml[ident])
 
 # 選を生成
-if (ident == "Gemini"):
+if (model_type == "gemini"):
     if args.series:
         # 連作対応Gemini選評
         output = gemini_series_select(yml[ident], df, result, num, theme, series_content)
@@ -258,46 +258,62 @@ if args.tts:
 
             print(Fore.YELLOW + f"[MESSAGE]: ラジオ原稿を生成しました → {script_path}" + Fore.RESET)
 
-            # --- TTS ------------------------------------------------------
-            speech_conf = tts_conf.get('speech_generation', {})
-            speech_wait = speech_conf.get('wait_sec', 20)
+            # --- TTS API Key Check ----------------------------------------
+            from lib.env_loader import has_paid_api_key, test_tts_api_key
+            
+            # Check if paid API key is available
+            if not has_paid_api_key():
+                print(Fore.YELLOW + "[WARNING]: 課金設定のあるAPIキー (GOOGLE_API_KEY_PAID) が設定されていません。" + Fore.RESET)
+                print(Fore.YELLOW + "[WARNING]: TTS音声生成をスキップし、ラジオ原稿の生成までで完了します。" + Fore.RESET)
+                print(Fore.CYAN + "[INFO]: TTS機能を使用するには、.envファイルにGOOGLE_API_KEY_PAIDを設定してください。" + Fore.RESET)
+            else:
+                # Test TTS API key validity
+                print(Fore.YELLOW + "[MESSAGE]: TTS APIキーの有効性をテストしています…" + Fore.RESET)
+                if not test_tts_api_key():
+                    print(Fore.YELLOW + "[WARNING]: 課金設定のあるAPIキーでTTS機能が利用できません。" + Fore.RESET)
+                    print(Fore.YELLOW + "[WARNING]: TTS音声生成をスキップし、ラジオ原稿の生成までで完了します。" + Fore.RESET)
+                    print(Fore.CYAN + "[INFO]: Google AI StudioでAPIキーの課金設定を確認してください。" + Fore.RESET)
+                else:
+                    # --- TTS Generation -------------------------------------------
+                    speech_conf = tts_conf.get('speech_generation', {})
+                    speech_wait = speech_conf.get('wait_sec', 20)
 
-            # ------------------------------------------------------------------
-            # Build speaker / voice list (configurable)
-            # ------------------------------------------------------------------
-            voices_conf = speech_conf.get(
-                'voices',
-                [
-                    {"speaker": "Speaker 1", "voice_name": "Charon"},
-                    {"speaker": "Speaker 2", "voice_name": "Gacrux"},
-                ],
-            )
+                    # ------------------------------------------------------------------
+                    # Build speaker / voice list (configurable)
+                    # ------------------------------------------------------------------
+                    voices_conf = speech_conf.get(
+                        'voices',
+                        [
+                            {"speaker": "Speaker 1", "voice_name": "Charon"},
+                            {"speaker": "Speaker 2", "voice_name": "Gacrux"},
+                        ],
+                    )
 
-            from google.genai import types as gtypes
+                    from google.genai import types as gtypes
 
-            speaker_voice_configs = [
-                gtypes.SpeakerVoiceConfig(
-                    speaker=v.get("speaker", f"speaker_{idx}"),
-                    voice_config=gtypes.VoiceConfig(
-                        prebuilt_voice_config=gtypes.PrebuiltVoiceConfig(
-                            voice_name=v.get("voice_name", "Charon")
+                    speaker_voice_configs = [
+                        gtypes.SpeakerVoiceConfig(
+                            speaker=v.get("speaker", f"speaker_{idx}"),
+                            voice_config=gtypes.VoiceConfig(
+                                prebuilt_voice_config=gtypes.PrebuiltVoiceConfig(
+                                    voice_name=v.get("voice_name", "Charon")
+                                )
+                            ),
                         )
-                    ),
-                )
-                for idx, v in enumerate(voices_conf)
-            ]
+                        for idx, v in enumerate(voices_conf)
+                    ]
 
-            output_base = os.path.join(output_dir, common_basename)
+                    output_base = os.path.join(output_dir, common_basename)
 
-            print(Fore.YELLOW + "[MESSAGE]: TTS を実行しています…" + Fore.RESET)
-            audio_file = generate_speech(
-                script_text=radio_script,
-                output_basename=output_base,
-                model_name=args.voice_model,
-                speaker_voice_configs=speaker_voice_configs,
-                wait_sec=speech_wait,
-            )
-            print(Fore.GREEN + f"[MESSAGE]: 音声ファイルを生成しました → {audio_file}" + Fore.RESET)
+                    print(Fore.YELLOW + "[MESSAGE]: TTS を実行しています…" + Fore.RESET)
+                    audio_file = generate_speech(
+                        script_text=radio_script,
+                        output_basename=output_base,
+                        model_name=args.voice_model,
+                        speaker_voice_configs=speaker_voice_configs,
+                        wait_sec=speech_wait,
+                    )
+                    print(Fore.GREEN + f"[MESSAGE]: 音声ファイルを生成しました → {audio_file}" + Fore.RESET)
     except Exception as e:
         print(Fore.RED + f"[ERROR]: TTS 生成中に例外が発生しました: {e}" + Fore.RESET)
 

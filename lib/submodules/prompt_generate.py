@@ -5,6 +5,7 @@ import os
 import torch
 import time
 from lib.submodules.tools import *
+from lib.env_loader import get_google_api_key, get_cohere_api_key, get_openai_api_key
 
 # gemini
 def gemini_generate(sys, prompt, model):
@@ -24,7 +25,7 @@ def gemini_generate(sys, prompt, model):
             output = "ERROR"
             break
         else:
-            genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+            genai.configure(api_key=get_google_api_key())
             model_name = model_list[gen_count]
             model = genai.GenerativeModel(model_name,
                                           system_instruction=sys)
@@ -64,7 +65,7 @@ def cohere_generate(prompt, tokenizer, model, configs):
              prompt["assist"])
     #key = API_keys[model_type]
     # cohere APIに入力
-    co = cohere.Client(os.environ["COHERE_API_KEY"])
+    co = cohere.Client(get_cohere_api_key())
                            
     response  = co.chat(seed  = seed_num,
                         temperature = configs["temperature"] ,
@@ -92,7 +93,7 @@ def openai_generate(prompt, model, configs):
     
     client = OpenAI()
     #openai.api_key = key
-    openai.api_key = os.environ["OPENAI_API_KEY"]
+    openai.api_key = get_openai_api_key()
     completion = client.chat.completions.create(model=model,
                                                 messages=text,
                                                 temperature = configs["temperature"]

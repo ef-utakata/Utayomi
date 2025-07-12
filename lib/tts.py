@@ -17,6 +17,7 @@ from typing import List
 # Google GenAI (>=0.8.5)
 import google.genai as genai
 from google.genai import types
+from lib.env_loader import get_google_api_key, get_google_api_key_paid
 
 # ---------------------------------------------------------------------------
 # low-level helpers
@@ -129,7 +130,7 @@ def generate_speech(
         )
     )
 
-    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+    client = genai.Client(api_key=get_google_api_key_paid())
 
     contents = script_text
 
@@ -264,7 +265,7 @@ def generate_radio_script(
 
     import google.genai as genai
 
-    client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+    client = genai.Client(api_key=get_google_api_key())
 
     print(f"[MESSAGE]: Gemini にラジオ原稿生成を依頼しています … ({model_name})")
 

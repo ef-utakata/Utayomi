@@ -11,6 +11,7 @@ from colorama import Fore, Back, Style
 from lib.model_input import *
 from lib.submodules.tanka_prompt import *
 from lib.submodules.tools import *
+from lib.env_loader import get_google_api_key
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
@@ -137,7 +138,7 @@ def gemini_select(configs, df, result, num, theme):
     odai = ""
     if not (theme == 0):
         odai = theme + "というお題で"
-    genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+    genai.configure(api_key=get_google_api_key())
 
     system = "あなたは短歌の表現や内容を詳細に評価することのできる役立つアシスタントです。"
     test_prompt = f"""以下は、短歌投稿企画に{odai}投稿された短歌の一覧です。
@@ -150,11 +151,16 @@ def gemini_select(configs, df, result, num, theme):
 なお、コメント中には短歌の一覧に記載されている通し番号を記載せず、最後に選出番号を用いて投稿歌全体の総評をコメントしてください。
 """
 
-    model = genai.GenerativeModel(model_name=configs["model_path"],
-                                  system_instruction=system)
-    response = model.generate_content(test_prompt,
-                                      generation_config=genai.types.GenerationConfig(temperature=configs["temperature"]))
-    return(response.text)
+    try:
+        model = genai.GenerativeModel(model_name=configs["model_path"],
+                                      system_instruction=system)
+        response = model.generate_content(test_prompt,
+                                          generation_config=genai.types.GenerationConfig(temperature=configs["temperature"]))
+        return(response.text)
+    except Exception as e:
+        error_msg = f"Gemini API Error: {str(e)}\nModel: {configs['model_path']}\nAPI Key set: {bool(get_google_api_key())}"
+        print(f"[ERROR] {error_msg}")
+        return("出力エラー")
 
 # geminiによる選
 def nemo_select(configs, model, tokenizer, df, result, num, theme):
@@ -232,7 +238,7 @@ def gemini_series_select(configs, df, result, num, theme, series_content):
     if not (theme == 0):
         odai = f"テーマ「{theme}」での"
     
-    genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+    genai.configure(api_key=get_google_api_key())
 
     system = "あなたは短歌の表現や内容を詳細に評価することのできる役立つアシスタントです。連作と単作の両方を適切に評価し、連作については各首の関連性や全体の構成も考慮して評価します。"
     

@@ -22,8 +22,27 @@ Mistral-Nemo-Japanese-gguf:
     repeat_penalty: 0.8
 
 Gemini:
-    #model_path: "gemini-1.5-pro-latest"
-    model_path: "gemini-2.5-pro-preview-05-06"
+    model_path: "gemini-2.5-pro"  # 無料利用可能な最新Proモデル (1M tokens入力, 64K tokens出力)
+    model_type: "gemini"
+    temperature: 0
+
+Gemini-Flash:
+    model_path: "gemini-2.5-flash-preview-05-20"  # 最新Flashプレビュー (1M tokens入力, 64K tokens出力)
+    model_type: "gemini"
+    temperature: 0
+
+Gemini-2.5-Pro:
+    model_path: "gemini-2.5-pro"  # 安定版Proモデル (1M tokens入力, 64K tokens出力)
+    model_type: "gemini"
+    temperature: 0
+
+Gemini-2.0-Flash:
+    model_path: "gemini-2.0-flash"  # 最新Flash (1M tokens入力, 8K tokens出力)
+    model_type: "gemini"
+    temperature: 0
+
+Gemini-Flash-8B:
+    model_path: "gemini-1.5-flash-8b-latest"  # 最もコスト効率の良いモデル
     model_type: "gemini"
     temperature: 0
 

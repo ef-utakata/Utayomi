@@ -86,6 +86,24 @@
     * TTSシステムで連作モード時の自動テンプレート選択機能を追加
     * 連作データ形式: `Eiso_count`列で首数指定、改行区切りで複数首を`Content`列に格納
 
+* 2025年7月11日: 1.3.0 公開
+    * **環境変数管理の改善**: `.env`ファイルサポートを追加
+    * `python-dotenv`を使用した安全なAPIキー管理機能を実装
+    * 新しい環境変数ローダー（`lib/env_loader.py`）を追加
+    * セキュリティ強化: `.env`ファイルがgitリポジトリに含まれないよう設定
+    * `.env.example`テンプレートファイルを提供
+    * 外部ライブラリリポジトリとの連携を改善（`input/library/`サポート）
+    * kotobadia/libraryリポジトリからの短歌データ自動同期機能を追加
+    * Gemini 1.5 Flashモデルをデフォルトに変更（無料利用に対応）
+
+* 2025年7月12日: 1.3.1 公開
+    * **課金APIキー対応**: TTS機能用の課金設定API キー分離
+    * `GOOGLE_API_KEY_PAID`による課金機能の安全な利用
+    * TTS機能の段階的処理: 課金APIキーがない場合はラジオ原稿生成まで実行
+    * Gemini 2.5 Pro/Flash最新プレビュー版への対応
+    * モデル設定の最適化とエラーハンドリングの改善
+    * 出力ファイル管理の改善: demo以外の出力ファイルをgit管理から除外
+
 ## 対応モデル
 以下の形式のモデルに対応しています。
 1. huggingface形式のモデル(transformerを使用)
@@ -97,19 +115,43 @@
 2024年7月25日時点で、以下のモデルを用いた入力短歌へのコメントの出力が可能です。
 
 
-APIでアクセスするモデルを利用する場合は、それぞれのモデルの配布元からAPI keyを取得し、以下の環境変数に入力する必要があります。
-* openAI: OPENAI_API_KEY
-* cohere: COHERE_API_KEY
-* Google: GOOGLE_API_KEY
+## APIキーの設定
 
-pypeline.pyの実行前に、.bashrcに各値を入力するか、以下のコマンドでAPI keyを入力してください。  
-notebook上で実行する場合は"API keyの入力"と記載のあるセルにkeyを入力してセルを実行すると一括入力されます。
+### 推奨方法: .envファイルを使用
+
+1. `.env.example`を`.env`にコピー:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. `.env`ファイルを編集して実際のAPIキーを設定:
+   ```env
+   # Google Gemini API Key (無料利用可能 - 選評生成・ラジオ原稿生成用)
+   # https://aistudio.google.com/app/apikey で取得
+   GOOGLE_API_KEY=your-google-api-key-here
+   
+   # Google Gemini API Key (課金設定あり - TTS音声生成用)
+   # TTS機能を使用する場合のみ設定
+   GOOGLE_API_KEY_PAID=your-paid-google-api-key-here
+   
+   # OpenAI API Key
+   # https://platform.openai.com/api-keys で取得
+   OPENAI_API_KEY=your-openai-api-key-here
+   
+   # Cohere API Key
+   # https://dashboard.cohere.ai/api-keys で取得
+   COHERE_API_KEY=your-cohere-api-key-here
+   ```
+
+### 代替方法: 環境変数として直接設定
 
 ```bash
+export GOOGLE_API_KEY="取得したAPI key"
 export OPENAI_API_KEY="取得したAPI key"
 export COHERE_API_KEY="取得したAPI key"
-export GOOGLE_API_KEY="取得したAPI key"
 ```
+
+**注意**: `.env`ファイルはgitignoreに含まれており、リモートリポジトリにアップロードされません。
 
 短歌生成におけるモデルの指定や生成時の詳細な設定は、yaml形式のファイル(model_conf.yaml)で記述します。
 引数-i でファイル内のどの設定を読み込むかを指定します。
@@ -263,6 +305,7 @@ python selection.py \
 
 ### TTS 付きで原稿・音声も生成する例
 
+#### 課金設定のあるAPIキーがある場合（完全なTTS機能）
 ```bash
 python selection.py \
     -c ./model_selection_conf.yaml \
@@ -272,6 +315,28 @@ python selection.py \
     --tts-config ./tts_generation_config.yaml \  # 原稿用設定 (デフォルトは同パス)
     ./output/demo/ \
     ./output/demo/ef_test_free_result.csv
+
+# 出力ファイル
+# ├── basename.md                 # 選評Markdown
+# ├── basename.radio_script.txt   # ラジオ原稿
+# └── basename.wav                # 音声ファイル
+```
+
+#### 課金設定のないAPIキーの場合（原稿生成まで）
+```bash
+# 同じコマンドでも自動的にラジオ原稿生成までで停止
+python selection.py \
+    -c ./model_selection_conf.yaml \
+    -i Gemini \
+    -n 8 \
+    --tts \
+    ./output/demo/ \
+    ./output/demo/ef_test_free_result.csv
+
+# 出力ファイル
+# ├── basename.md                 # 選評Markdown
+# └── basename.radio_script.txt   # ラジオ原稿
+# 音声ファイルは生成されません（警告メッセージが表示）
 ```
 
 ### デバッグモード（開発・トラブルシューティング用）
@@ -321,5 +386,75 @@ python markdown_to_tts.py \
     output/ \                                        # 出力ディレクトリ
     --config ./tts_generation_config.yaml           # TTS設定ファイル（オプション）
 ```
+
+## 外部ライブラリデータの利用
+
+### kotobadia/libraryリポジトリとの連携
+
+1. **初回セットアップ**: libraryリポジトリは既にclone済み
+   ```
+   input/library/ja/literature/tanka/monthly/2025/06/
+   ├── selected.csv          # 単作短歌データ
+   ├── series-regular.csv    # 連作短歌データ
+   └── series-three.csv      # 3首連作データ
+   ```
+
+2. **データ更新**: 定期的にリポジトリを更新
+   ```bash
+   # 自動更新スクリプトを使用
+   ./update_library.sh
+   
+   # または手動で更新
+   cd input/library
+   git pull origin main
+   ```
+
+3. **ライブラリデータでの実行例**:
+   ```bash
+   # 単作選評
+   python selection.py \
+       input/library/ja/literature/tanka/monthly/2025/06/selected.csv \
+       output/ \
+       -i Gemini \
+       -n 8 \
+       -a "毎月短歌23:5月自選部門"
+   
+   # 連作選評
+   python selection.py \
+       input/library/ja/literature/tanka/monthly/2025/06/series-regular.csv \
+       output/ \
+       -i Gemini \
+       -n 3 \
+       -a "毎月短歌23:連作部門" \
+       --series
+   ```
+
+## クイックスタート
+
+1. **環境準備**:
+   ```bash
+   # conda環境をアクティベート
+   conda activate tanka
+   
+   # 依存関係をインストール
+   pip install -r requirements.txt
+   ```
+
+2. **APIキー設定**:
+   ```bash
+   cp .env.example .env
+   # .envファイルを編集してAPIキーを設定
+   ```
+
+3. **基本実行**:
+   ```bash
+   # ライブラリデータで選評実行
+   python selection.py \
+       input/library/ja/literature/tanka/monthly/2025/06/selected.csv \
+       output/ \
+       -i Gemini \
+       -n 5 \
+       -a "テスト選評"
+   ```
 
 

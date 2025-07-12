@@ -1,5 +1,15 @@
-output/my_results
+# output以下のディレクトリ・ファイルでdemo以外は無視
+# 実行結果のoutputファイルはローカルのみに保存し、リモートにpushしない
+output/*/
+!output/demo/
 output/*.csv
+output/*.md
+output/*.txt
+output/*.wav
+output/*.mp3
+output/*.ogg
+output/*.radio_script.txt
+
 input/*.csv
 input/demo/.*
 # input以下のディレクトリでdemo以外は無視
@@ -19,3 +29,15 @@ research/
 tests/
 # 開発者用ファイル（リモートに不要）
 CLAUDE.md
+
+# 環境変数ファイル - APIキー等機密情報を含む
+.env
+.env.local
+.env.*.local
+
+# Python関連
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
