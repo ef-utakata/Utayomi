@@ -12,6 +12,21 @@ def tanka_preprocess(input_csv):
 
     df = pd.DataFrame()
     df_raw = pd.read_csv(input_csv)
+    
+    # 列名の正規化（小文字→大文字）
+    column_mapping = {
+        'content': 'Content',
+        'author': 'Author', 
+        'author_comment': 'Author_comment',
+        'author_url': 'Author_URL',
+        'no': 'No'
+    }
+    
+    # 列名を正規化
+    for old_name, new_name in column_mapping.items():
+        if old_name in df_raw.columns and new_name not in df_raw.columns:
+            df_raw.rename(columns={old_name: new_name}, inplace=True)
+            print(Fore.CYAN + f"[INFO]: 列名を正規化しました: {old_name} → {new_name}" + Fore.RESET)
 
     # No列がない場合は自動で追加
     if 'No' not in df_raw.columns:
