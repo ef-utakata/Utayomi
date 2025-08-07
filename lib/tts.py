@@ -236,11 +236,15 @@ def generate_radio_script(
         template = f.read()
 
     # ---------------------------------------
-    # テンプレート置換
+    # 再現性レポートを除去してからテンプレート置換
     # ---------------------------------------
-
+    from lib.report_generator import remove_reproducibility_report
+    
+    # 再現性レポート部分を除去
+    cleaned_markdown = remove_reproducibility_report(selection_markdown)
+    
     prompt_text = template.replace(
-        "{出力した選評とコメントをここに入力}", selection_markdown
+        "{出力した選評とコメントをここに入力}", cleaned_markdown
     )
 
     # 企画セクションを置換（テンプレートに含まれていない場合も考慮）

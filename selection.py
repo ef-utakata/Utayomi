@@ -21,8 +21,9 @@ from lib.submodules.tools import *
 from lib.submodules.model_load import *
 from lib.tanka_critic import *
 from lib.cli import get_common_parser, handle_version, handle_list, load_config
+from lib.report_generator import generate_reproducibility_report
 
-ver = """Utayomi-selection Version: 1.3.1
+ver = """Utayomi-selection Version: 1.3.2
 設計: ef_utakata
 """
 
@@ -207,10 +208,23 @@ if args.debug:
 # --------------------------------------------------
 output = attach_authors_to_output(output, df)
 
+# 再現性レポートの生成
+reproducibility_report = generate_reproducibility_report(
+    version=ver,
+    model_identifier=ident,
+    config_file=args.config,
+    application=args.application if args.application != "毎月短歌" else None,
+    theme=theme if theme != "0" else None,
+    num_selections=int(num),
+    is_series=args.series,
+    is_tts=args.tts,
+    is_debug=args.debug
+)
+
 # markdown 保存用にダミー CSV パスを構築（tools.selection_markdown は拡張子を除いてベース名を利用）
 markdown_dummy_csv = os.path.join(os.path.dirname(df_temp_path), f"{common_basename}.csv")
 
-selection_markdown(ident, output, markdown_dummy_csv)
+selection_markdown(ident, output, markdown_dummy_csv, report_content=reproducibility_report)
 
 # -----------------------------------------------------------------
 # TTS 出力 (オプション)

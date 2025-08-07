@@ -340,7 +340,7 @@ def process_content(df: pd.DataFrame) -> str:
 # これにより呼び出し側で `out_csv` を自由に構築することで、
 # 任意のファイル名規約に従った Markdown 生成が可能になる。
 
-def selection_markdown(model, result, out_csv):
+def selection_markdown(model, result, out_csv, report_content=None):
 
     # directory to save under
     dirname = os.path.dirname(out_csv)
@@ -357,5 +357,8 @@ def selection_markdown(model, result, out_csv):
 
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(result)
+        # 再現性レポートを追加
+        if report_content:
+            f.write(report_content)
 
     # Markdown→PDF 変換は廃止済み。
