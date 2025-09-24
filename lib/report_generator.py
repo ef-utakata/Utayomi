@@ -61,6 +61,7 @@ def generate_reproducibility_report(
     version: str,
     model_identifier: str,
     config_file: str,
+    model_details: Optional[str] = None,
     application: Optional[str] = None,
     theme: Optional[str] = None,
     num_selections: Optional[int] = None,
@@ -95,7 +96,10 @@ def generate_reproducibility_report(
         f"- **使用モデル**: {model_identifier}",
         f"- **設定ファイル**: {config_file}",
     ]
-    
+
+    if model_details:
+        report_lines.append(f"- **モデル詳細**: {model_details}")
+
     if application:
         report_lines.append(f"- **応募企画**: {application}")
     

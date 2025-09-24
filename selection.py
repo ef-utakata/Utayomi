@@ -3,6 +3,8 @@ import datetime
 import yaml
 import os
 import subprocess
+from typing import Any, Optional
+
 import pandas as pd
 import colorama
 from colorama import Fore, Back, Style
@@ -64,6 +66,23 @@ ident = args.identifier
 common_basename = f"{input_basename}_{application_sanitized}_{ident}"
 start_A = datetime.datetime.now()
 yml = load_config(args.config, ident)
+model_details_entry = yml.get(ident, {}) if isinstance(yml, dict) else {}
+
+def stringify_model_details(details: Any) -> Optional[str]:
+    """Convert model_path definitions into a human-readable string."""
+    if details is None:
+        return None
+    if isinstance(details, dict):
+        ordered_keys = sorted(details.keys())
+        values = [str(details[key]) for key in ordered_keys]
+        return ", ".join(values)
+    if isinstance(details, (list, tuple, set)):
+        return ", ".join(str(item) for item in details)
+    return str(details)
+
+model_details = stringify_model_details(
+    model_details_entry.get("model_path") if isinstance(model_details_entry, dict) else None
+)
 handle_list(args)
 
 # load model configuration
@@ -213,6 +232,7 @@ reproducibility_report = generate_reproducibility_report(
     version=ver,
     model_identifier=ident,
     config_file=args.config,
+    model_details=model_details,
     application=args.application if args.application != "毎月短歌" else None,
     theme=theme if theme != "0" else None,
     num_selections=int(num),
@@ -335,5 +355,3 @@ if args.tts:
                     print(Fore.GREEN + f"[MESSAGE]: 音声ファイルを生成しました → {audio_file}" + Fore.RESET)
     except Exception as e:
         print(Fore.RED + f"[ERROR]: TTS 生成中に例外が発生しました: {e}" + Fore.RESET)
-
-
