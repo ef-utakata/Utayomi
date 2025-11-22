@@ -397,6 +397,27 @@ python markdown_to_tts.py \
     --config ./tts_generation_config.yaml           # TTS設定ファイル（オプション）
 ```
 
+### 読み上げ原稿から字幕 (SRT) を生成
+
+既存のラジオ原稿と完成済みの動画から、Gemini API を用いて SRT 形式の字幕を作成する補助スクリプト `generate_srt_from_script.py` を追加しています。
+
+```bash
+python generate_srt_from_script.py \
+    output/monthly/2025/11/selected_毎月短歌28\:10月自選部門_Gemini.radio_script.txt \ # 読み上げ原稿
+    output/monthly/2025/11/test.mp4 \                                                  # 完成動画
+    --debug                                                                             # 中間ログ保存 (任意)
+
+# 自動生成されるファイル
+# ├── test.srt                                          # 動画ファイル名と同じbasenameで出力
+# ├── *.prompt.txt / *.gemini_raw.txt ( --debug 時のみ )  # プロンプト・応答のログ
+# ├── *.gemini_clean.txt ( --debug 時のみ )
+# └── *.gemini_parse_error.txt ( --debug かつパース失敗時 )
+```
+
+- 動画の長さは `ffprobe` で取得します。環境に FFmpeg が必要です。
+- `--debug` を付けると、Gemini へ送ったプロンプトや応答結果を同じディレクトリに保存するので、解析失敗時のトラブルシュートが容易です。
+- 生成された SRT は動画と同じベース名 (`test.mp4` → `test.srt`) で、動画と同じ場所に保存されます。
+
 ## 外部ライブラリデータの利用
 
 ### kotobadia/libraryリポジトリとの連携
@@ -466,4 +487,3 @@ python markdown_to_tts.py \
        -n 5 \
        -a "テスト選評"
    ```
-
