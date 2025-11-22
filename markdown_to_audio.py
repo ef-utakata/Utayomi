@@ -27,10 +27,10 @@ def main():
     
     # TTS設定ファイルの読み込み
     try:
-        with open('./tts_generation_config.yaml', 'r', encoding='utf-8') as f:
+        with open('./config/tts_generation_config.yaml', 'r', encoding='utf-8') as f:
             tts_config = yaml.safe_load(f)
     except FileNotFoundError:
-        print("Error: tts_generation_config.yaml not found")
+        print("Error: config/tts_generation_config.yaml not found")
         sys.exit(1)
     
     # Markdownファイルの読み込み
@@ -48,7 +48,7 @@ def main():
         print("📝 Generating radio script...")
         radio_script = generate_radio_script(
             selection_markdown=selection_markdown,
-            template_path='./generate_script_prompt.md',
+            template_path='./templates/generate_script_prompt.md',
             model_name=tts_config.get('script_generation', {}).get('model_name', 'gemini-2.5-pro-preview'),
             temperature=tts_config.get('script_generation', {}).get('temperature', 0.7),
             wait_sec=tts_config.get('script_generation', {}).get('wait_sec', 20),

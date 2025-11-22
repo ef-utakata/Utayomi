@@ -27,8 +27,8 @@ def main():
     )
     parser.add_argument('input_script', help='Input radio script file path (e.g., *.radio_script.txt)')
     parser.add_argument('output_dir', help='Output directory for TTS files')
-    parser.add_argument('--config', default='./tts_generation_config.yaml', 
-                        help='TTS configuration file (default: ./tts_generation_config.yaml)')
+    parser.add_argument('--config', default='./config/tts_generation_config.yaml', 
+                        help='TTS configuration file (default: ./config/tts_generation_config.yaml)')
     
     args = parser.parse_args()
     

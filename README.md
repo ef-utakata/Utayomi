@@ -20,6 +20,13 @@
 **Gemini を使用した選評モード（`selection.py` + `--tts`）** に
 集中している点をご承知おきください。
 
+## ディレクトリ構成（抜粋）
+
+- `config/`: モデル設定 (`model_conf.yaml`, `model_selection_conf.yaml`) や TTS 設定 (`tts_generation_config.yaml`) を格納
+- `templates/`: ラジオ原稿テンプレート (`generate_script_prompt*.md`) を格納
+- `lib/`, `tests/`, `input/`, `output/`: 従来どおり
+- ルート直下にはエントリーポイントとなるスクリプト (`selection.py`, `pipeline.py`, など) と開発ドキュメントのみを配置
+
 ## 更新履歴
 * 2024年6月22日: 0.1.0 公開
 * 2024年6月29日: 0.2.0 公開
@@ -57,7 +64,7 @@
 * 2025年6月1日: 1.1.0 公開
     * TTS のデフォルトモデルを `gemini-2.5-pro-preview-tts` に変更
     * マルチスピーカー TTS に対応 (デフォルト: Speaker 1=Charon / Speaker 2=Gacrux)
-      - `tts_generation_config.yaml` に `speech_generation.voices` を追加し
+      - `config/tts_generation_config.yaml` に `speech_generation.voices` を追加し
         YAML で簡単に話者・音色を差し替え可能
     * 旧 `google-generativeai` SDK を廃止し **`google-genai >=0.8.5`** へ移行
     * 単体テスト `tests/test_tts.py` を追加（API キーがある環境で音声生成を検証）
@@ -165,7 +172,7 @@ export COHERE_API_KEY="取得したAPI key"
 
 **注意**: `.env`ファイルはgitignoreに含まれており、リモートリポジトリにアップロードされません。
 
-短歌生成におけるモデルの指定や生成時の詳細な設定は、yaml形式のファイル(model_conf.yaml)で記述します。
+短歌生成におけるモデルの指定や生成時の詳細な設定は、`config/model_conf.yaml` で記述します。
 引数-i でファイル内のどの設定を読み込むかを指定します。
 
 以下のコマンドで、-i に入力可能な識別子一覧を表示できます。
@@ -174,8 +181,8 @@ export COHERE_API_KEY="取得したAPI key"
 python pipeline.py --list 
 ```
 
-## 設定ファイルmodel_conf.yamlの記述方法
-設定ファイル(model_conf.yaml)は利用可能なモデルを追加したり細かい設定を変更する場合などに開発者が編集しやすいようにするためのもので、
+## 設定ファイル model_conf.yaml の記述方法
+`config/model_conf.yaml` は利用可能なモデルを追加したり細かい設定を変更する場合などに開発者が編集しやすいようにするためのもので、
 システムの利用のみの場合は特に編集する必要はありません。
 
 ## 前処理スクリプト: Excel to CSV
@@ -249,7 +256,7 @@ python excel_to_csv.py input.xlsx output_directory [--encoding utf-8]
 ```sh
 python pipeline.py \
     -m first \ # 全評モード(defaultで指定されているので入力の必要はなし)
-    -c ./model_conf.yaml \ # 読み込むモデルの設定ファイル
+    -c ./config/model_conf.yaml \ # 読み込むモデルの設定ファイル
     -i Calm3-22B \ # 使用するモデルのidentifier
     -t お題 \ # 題詠・テーマ詠の場合(指定しなければ自由詠)
     ./output/demo/ \ # 結果の出力先ディレクトリ
@@ -266,7 +273,7 @@ python pipeline.py \
 # 歌会モードで各コメントを要約
 python pipeline.py \
     -m utakai \  # モード指定
-    -c ./model_conf.yaml \ # 読み込むモデルの設定ファイル
+    -c ./config/model_conf.yaml \ # 読み込むモデルの設定ファイル
     -i EZO-Qwen2.5-72B \ # 要約に使用するモデルのidentifier
     ./output/demo/ \ # 結果の出力先ディレクトリ
     ./output/demo/ef_test_free_result.csv # 各LLMからの表を記載したcsvファイル
@@ -306,7 +313,7 @@ python selection.py -V
 ```sh
 # 選評モードで短歌を選ぶ例 (Markdown のみ)
 python selection.py \
-    -c ./model_selection_conf.yaml \ # 選評モード用のモデル設定ファイル
+    -c ./config/model_selection_conf.yaml \ # 選評モード用のモデル設定ファイル
     -i Mistral-Nemo-Japanese \ # 選評に使用するモデルのidentifier
     -t お題名 \ # お題指定(省略時は自由詠)
     -a 毎月短歌nn：yyyy部門 \ # 選評対象の企画の名称(出力結果に記載するもの)
@@ -320,11 +327,11 @@ python selection.py \
 #### 課金設定のあるAPIキーがある場合（完全なTTS機能）
 ```bash
 python selection.py \
-    -c ./model_selection_conf.yaml \
+    -c ./config/model_selection_conf.yaml \
     -i Gemini \                 # 原稿生成・TTS には Gemini を推奨
     -n 8 \
     --tts \                     # 音声化を有効化
-    --tts-config ./tts_generation_config.yaml \  # 原稿用設定 (デフォルトは同パス)
+    --tts-config ./config/tts_generation_config.yaml \  # 原稿用設定 (デフォルトは同パス)
     ./output/demo/ \
     ./output/demo/ef_test_free_result.csv
 
@@ -338,7 +345,7 @@ python selection.py \
 ```bash
 # 同じコマンドでも自動的にラジオ原稿生成までで停止
 python selection.py \
-    -c ./model_selection_conf.yaml \
+    -c ./config/model_selection_conf.yaml \
     -i Gemini \
     -n 8 \
     --tts \
@@ -355,7 +362,7 @@ python selection.py \
 
 ```bash
 python selection.py \
-    -c ./model_selection_conf.yaml \
+    -c ./config/model_selection_conf.yaml \
     -i Gemini \
     -n 5 \
     --debug \                   # LLMからの生出力も中間ファイルとして保存
@@ -370,7 +377,7 @@ python selection.py \
 ```bash
 # 連作選評（Markdownのみ）
 python selection.py \
-    -c ./model_selection_conf.yaml \
+    -c ./config/model_selection_conf.yaml \
     -i Gemini \                 # 連作評価には Gemini を推奨
     -n 2 \                      # 選ぶ連作の数
     --series \                  # 連作モードを有効化
@@ -379,7 +386,7 @@ python selection.py \
 
 # 連作選評 + TTS
 python selection.py \
-    -c ./model_selection_conf.yaml \
+    -c ./config/model_selection_conf.yaml \
     -i Gemini \
     -n 2 \
     --series \
@@ -396,7 +403,7 @@ python selection.py \
 python markdown_to_tts.py \
     output/April22_4月自選_Gemini.radio_script.txt \  # 編集済みラジオ原稿ファイル
     output/ \                                        # 出力ディレクトリ
-    --config ./tts_generation_config.yaml           # TTS設定ファイル（オプション）
+    --config ./config/tts_generation_config.yaml    # TTS設定ファイル（オプション）
 ```
 
 ### 読み上げ原稿から字幕 (SRT) を生成

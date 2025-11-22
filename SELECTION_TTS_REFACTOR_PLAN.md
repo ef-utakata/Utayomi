@@ -68,7 +68,7 @@
 8. [x] `selection.py` に `--tts`, `--voice-model` などを追加。
 9. [x] ラジオ原稿 (`basename.radio_script.txt`) → TTS (`basename.[ext]`) の流れを実装。
 10. [x] 出力ファイル名を `{input}_{a}_{i}` ベースで統一。
-11. [x] `tts_generation_config.yaml` の `model_name` デフォルトを `gemini-2.5-flash-preview-05-20` に変更。
+11. [x] `config/tts_generation_config.yaml` の `model_name` デフォルトを `gemini-2.5-flash-preview-05-20` に変更。
 12. [ ] `selection.py` の `--voice-model` デフォルトも同モデルへ変更。
 
 ### E. ドキュメント更新

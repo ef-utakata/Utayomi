@@ -1,7 +1,7 @@
 script_generation:
   model_name: "gemini-2.5-pro"  # 無料利用可能な最新Proモデルを使用
   temperature: 0.7
-  prompt_template: "./generate_script_prompt.md"
+  prompt_template: "./templates/generate_script_prompt.md"
   wait_sec: 60           # Gemini API 呼び出し後に待機する秒数(原稿生成)
 
 speech_generation:

@@ -23,7 +23,7 @@ ver = """Utayomi Version: 0.4.0
 # 共通CLI処理を抽出
 parser = get_common_parser(
     description="""Utayomi: 入力された短歌についてLLMにより評を生成するシステムです。設計: ef_utakata """,
-    default_config='./model_conf.yaml'
+    default_config='./config/model_conf.yaml'
 )
 # pipeline-specific arguments
 parser.add_argument(
@@ -277,5 +277,4 @@ else:
 # ggufモデルの自動ダウンロードの実行
 # requirements.txtの構築、cuda環境の確認
 # dockerコンテナ化と動作確認
-
 

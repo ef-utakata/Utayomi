@@ -32,14 +32,14 @@ ver = """Utayomi-selection Version: 1.3.2
 
 parser = get_common_parser(
     description="""Utayomi: 入力された短歌についてLLMが選を行うシステムです。設計: ef_utakata """,
-    default_config='./model_selection_conf.yaml'
+    default_config='./config/model_selection_conf.yaml'
 )
 parser.add_argument('-n', '--number', help='選ぶ短歌の数', default=5)
 parser.add_argument('-a', '--application', help='応募企画・応募分野の名称', default="毎月短歌")
 # TTS 連携オプション
 parser.add_argument('--tts', action='store_true', help='選評MarkdownをTTSで音声化しファイル出力する')
 parser.add_argument('--voice-model', default='gemini-2.5-pro-preview-tts', help='TTS に使用する Gemini モデル名（課金設定のあるAPIキーが必要）')
-parser.add_argument('--tts-config', default='./tts_generation_config.yaml', help='原稿生成用の設定ファイル')
+parser.add_argument('--tts-config', default='./config/tts_generation_config.yaml', help='原稿生成用の設定ファイル')
 # デバッグオプション
 parser.add_argument('--debug', action='store_true', help='デバッグモード: LLMからの生の出力も保存する')
 # 連作オプション
@@ -288,7 +288,7 @@ try:
         tts_conf = yaml.safe_load(yml_file) or {}
 
     script_conf = tts_conf.get('script_generation', {})
-    template_path = script_conf.get('prompt_template', './generate_script_prompt.md')
+    template_path = script_conf.get('prompt_template', './templates/generate_script_prompt.md')
     script_model = script_conf.get('model_name', 'gemini-2.5-pro-preview')
     script_temp = script_conf.get('temperature', 0.7)
     script_wait = script_conf.get('wait_sec', 20)
