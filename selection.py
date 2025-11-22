@@ -232,6 +232,31 @@ def attach_authors_to_output(text, df):
             new = new.replace(content, f"{content}（作者：{author_link}）", 1)
     return new
 
+
+def extract_author_handles(df):
+    authors = []
+    twitter_handle_pattern = re.compile(r"twitter\.com/([^/]+)", re.IGNORECASE)
+
+    if 'Author' not in df.columns:
+        return authors
+
+    for _, row in df.iterrows():
+        name = (row.get('Author') or '').strip()
+        url = (row.get('Author_URL') or '').strip()
+        handle = None
+
+        if url:
+            match = twitter_handle_pattern.search(url)
+            if match:
+                handle = match.group(1)
+
+        formatted = f"作者名:{name}"
+        if handle:
+            formatted += f" (@{handle})"
+        authors.append(formatted)
+
+    return authors
+
 #
 # デバッグモード: 生の LLM 出力を保存
 # --------------------------------------------------
@@ -266,6 +291,14 @@ reproducibility_report = generate_reproducibility_report(
 markdown_dummy_csv = os.path.join(os.path.dirname(df_temp_path), f"{common_basename}.csv")
 
 selection_markdown(ident, output, markdown_dummy_csv, report_content=reproducibility_report)
+
+# 作者情報テキストの生成
+author_list = extract_author_handles(df)
+if author_list:
+    authors_txt_path = os.path.join(os.path.dirname(markdown_dummy_csv), f"{common_basename}_authors.txt")
+    with open(authors_txt_path, 'w', encoding='utf-8') as f:
+        f.write("\n".join(author_list))
+    print(Fore.YELLOW + f"[MESSAGE]: 作者情報リストを出力しました → {authors_txt_path}" + Fore.RESET)
 
 # -----------------------------------------------------------------
 result_dir = os.path.dirname(df_temp_path)
