@@ -2,6 +2,7 @@ import argparse
 import datetime
 import yaml
 import os
+import shutil
 import subprocess
 from typing import Any, Optional
 
@@ -16,7 +17,7 @@ import re
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 # 自作 TTS モジュール
-from lib.tts import generate_speech
+from lib.tts import generate_speech, generate_radio_script
 
 # libの自作モジュールをインポート
 from lib.submodules.tools import *
@@ -65,6 +66,8 @@ ident = args.identifier
 
 common_basename = f"{input_basename}_{application_sanitized}_{ident}"
 start_A = datetime.datetime.now()
+output_dir = prepare_output_directory(args.output)
+args.output = output_dir
 yml = load_config(args.config, ident)
 model_details_entry = yml.get(ident, {}) if isinstance(yml, dict) else {}
 
@@ -79,6 +82,24 @@ def stringify_model_details(details: Any) -> Optional[str]:
     if isinstance(details, (list, tuple, set)):
         return ", ".join(str(item) for item in details)
     return str(details)
+
+
+def prepare_output_directory(path: str) -> str:
+    """Ensure the output directory exists and is empty."""
+    if not path:
+        raise ValueError("Output directory path is empty.")
+
+    abs_path = os.path.abspath(path)
+
+    if os.path.exists(abs_path):
+        if os.path.isdir(abs_path):
+            shutil.rmtree(abs_path)
+        else:
+            os.remove(abs_path)
+
+    os.makedirs(abs_path, exist_ok=True)
+    print(Fore.YELLOW + f"[MESSAGE]: 出力ディレクトリ[{abs_path}]を初期化します..." + Fore.RESET)
+    return abs_path
 
 model_details = stringify_model_details(
     model_details_entry.get("model_path") if isinstance(model_details_entry, dict) else None
@@ -247,79 +268,75 @@ markdown_dummy_csv = os.path.join(os.path.dirname(df_temp_path), f"{common_basen
 selection_markdown(ident, output, markdown_dummy_csv, report_content=reproducibility_report)
 
 # -----------------------------------------------------------------
+result_dir = os.path.dirname(df_temp_path)
+md_path = os.path.join(result_dir, f"{common_basename}.md")
+script_path = os.path.join(result_dir, f"{common_basename}.radio_script.txt")
+radio_script = None
+tts_conf = None
+
+try:
+    if not os.path.exists(md_path):
+        raise FileNotFoundError(f"Markdown ファイル {md_path} が見つかりません。")
+
+    with open(md_path, 'r', encoding='utf-8') as f:
+        selection_md = f.read()
+
+    if not os.path.exists(args.tts_config):
+        raise FileNotFoundError(f"TTS 設定ファイル {args.tts_config} が見つかりません。")
+
+    with open(args.tts_config, 'r', encoding='utf-8') as yml_file:
+        tts_conf = yaml.safe_load(yml_file) or {}
+
+    script_conf = tts_conf.get('script_generation', {})
+    template_path = script_conf.get('prompt_template', './generate_script_prompt.md')
+    script_model = script_conf.get('model_name', 'gemini-2.5-pro-preview')
+    script_temp = script_conf.get('temperature', 0.7)
+    script_wait = script_conf.get('wait_sec', 20)
+
+    radio_script = generate_radio_script(
+        selection_markdown=selection_md,
+        template_path=template_path,
+        model_name=script_model,
+        temperature=script_temp,
+        wait_sec=script_wait,
+        theme=theme,
+        application=application,
+        is_series=args.series,
+    )
+
+    with open(script_path, 'w', encoding='utf-8') as f:
+        f.write(radio_script)
+
+    print(Fore.YELLOW + f"[MESSAGE]: ラジオ原稿を生成しました → {script_path}" + Fore.RESET)
+except FileNotFoundError as e:
+    print(Fore.RED + f"[ERROR]: {e}" + Fore.RESET)
+except Exception as e:
+    print(Fore.RED + f"[ERROR]: ラジオ原稿の生成中に例外が発生しました: {e}" + Fore.RESET)
+
+# -----------------------------------------------------------------
 # TTS 出力 (オプション)
 # -----------------------------------------------------------------
 if args.tts:
-    try:
-        output_dir = os.path.dirname(df_temp_path)
-
-        md_path = os.path.join(output_dir, f"{common_basename}.md")
-
-        if not os.path.exists(md_path):
-            print(Fore.RED + f"[ERROR]: Markdown ファイル {md_path} が見つかりません。TTS をスキップします。" + Fore.RESET)
-        else:
-            with open(md_path, 'r', encoding='utf-8') as f:
-                selection_md = f.read()
-
-            # --- Radio script generation ---------------------------------
-            import yaml
-            from lib.tts import generate_radio_script
-
-            if not os.path.exists(args.tts_config):
-                print(Fore.RED + f"[ERROR]: TTS 設定ファイル {args.tts_config} が見つかりません。TTS をスキップします。" + Fore.RESET)
-                raise FileNotFoundError
-
-            with open(args.tts_config, 'r', encoding='utf-8') as yml_file:
-                tts_conf = yaml.safe_load(yml_file)
-
-            script_conf = tts_conf.get('script_generation', {})
-            template_path = script_conf.get('prompt_template', './generate_script_prompt.md')
-            script_model = script_conf.get('model_name', 'gemini-2.5-pro-preview')
-            script_temp = script_conf.get('temperature', 0.7)
-            script_wait = script_conf.get('wait_sec', 20)
-
-            # create radio script using Gemini
-            radio_script = generate_radio_script(
-                selection_markdown=selection_md,
-                template_path=template_path,
-                model_name=script_model,
-                temperature=script_temp,
-                wait_sec=script_wait,
-                theme=theme,
-                application=application,
-                is_series=args.series,
-            )
-
-            # save generated script for reference
-            script_path = os.path.join(output_dir, f"{common_basename}.radio_script.txt")
-            with open(script_path, 'w', encoding='utf-8') as f:
-                f.write(radio_script)
-
-            print(Fore.YELLOW + f"[MESSAGE]: ラジオ原稿を生成しました → {script_path}" + Fore.RESET)
+    if not radio_script or not tts_conf:
+        print(Fore.RED + "[ERROR]: ラジオ原稿またはTTS設定の準備に失敗したため、音声生成をスキップします。" + Fore.RESET)
+    else:
+        try:
+            from lib.env_loader import has_paid_api_key, test_tts_api_key
 
             # --- TTS API Key Check ----------------------------------------
-            from lib.env_loader import has_paid_api_key, test_tts_api_key
-            
-            # Check if paid API key is available
             if not has_paid_api_key():
                 print(Fore.YELLOW + "[WARNING]: 課金設定のあるAPIキー (GOOGLE_API_KEY_PAID) が設定されていません。" + Fore.RESET)
                 print(Fore.YELLOW + "[WARNING]: TTS音声生成をスキップし、ラジオ原稿の生成までで完了します。" + Fore.RESET)
                 print(Fore.CYAN + "[INFO]: TTS機能を使用するには、.envファイルにGOOGLE_API_KEY_PAIDを設定してください。" + Fore.RESET)
             else:
-                # Test TTS API key validity
                 print(Fore.YELLOW + "[MESSAGE]: TTS APIキーの有効性をテストしています…" + Fore.RESET)
                 if not test_tts_api_key():
                     print(Fore.YELLOW + "[WARNING]: 課金設定のあるAPIキーでTTS機能が利用できません。" + Fore.RESET)
                     print(Fore.YELLOW + "[WARNING]: TTS音声生成をスキップし、ラジオ原稿の生成までで完了します。" + Fore.RESET)
                     print(Fore.CYAN + "[INFO]: Google AI StudioでAPIキーの課金設定を確認してください。" + Fore.RESET)
                 else:
-                    # --- TTS Generation -------------------------------------------
                     speech_conf = tts_conf.get('speech_generation', {})
                     speech_wait = speech_conf.get('wait_sec', 20)
-
-                    # ------------------------------------------------------------------
-                    # Build speaker / voice list (configurable)
-                    # ------------------------------------------------------------------
                     voices_conf = speech_conf.get(
                         'voices',
                         [
@@ -342,7 +359,7 @@ if args.tts:
                         for idx, v in enumerate(voices_conf)
                     ]
 
-                    output_base = os.path.join(output_dir, common_basename)
+                    output_base = os.path.join(result_dir, common_basename)
 
                     print(Fore.YELLOW + "[MESSAGE]: TTS を実行しています…" + Fore.RESET)
                     audio_file = generate_speech(
@@ -353,5 +370,5 @@ if args.tts:
                         wait_sec=speech_wait,
                     )
                     print(Fore.GREEN + f"[MESSAGE]: 音声ファイルを生成しました → {audio_file}" + Fore.RESET)
-    except Exception as e:
-        print(Fore.RED + f"[ERROR]: TTS 生成中に例外が発生しました: {e}" + Fore.RESET)
+        except Exception as e:
+            print(Fore.RED + f"[ERROR]: TTS 生成中に例外が発生しました: {e}" + Fore.RESET)
